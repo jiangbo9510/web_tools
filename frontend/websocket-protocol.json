@@ -1,0 +1,60 @@
+{
+  "protocol": {
+    "version": "1.0",
+    "description": "WebSocket通信协议规范"
+  },
+  "messageTypes": {
+    "register": {
+      "description": "客户端注册消息",
+      "request": {
+        "type": "register",
+        "keyHash": "string (MD5哈希值)"
+      },
+      "response": "无响应，注册成功后客户端进入连接状态"
+    },
+    "message": {
+      "description": "文本消息传输",
+      "request": {
+        "type": "message",
+        "keyHash": "string (MD5哈希值)",
+        "encryptedMessage": "string (AES加密后的消息)"
+      },
+      "response": {
+        "type": "message",
+        "encryptedMessage": "string (AES加密后的消息)"
+      }
+    },
+    "error": {
+      "description": "错误消息",
+      "response": {
+        "type": "error",
+        "message": "string (错误描述)"
+      }
+    }
+  },
+  "encryption": {
+    "algorithm": "AES",
+    "keyFormat": "用户自定义密钥（仅限字母和数字）",
+    "keyHash": "MD5",
+    "description": "所有消息使用AES加密，密钥由客户端管理"
+  },
+  "examples": {
+    "register": {
+      "type": "register",
+      "keyHash": "5d41402abc4b2a76b9719d911017c592"
+    },
+    "sendMessage": {
+      "type": "message",
+      "keyHash": "5d41402abc4b2a76b9719d911017c592",
+      "encryptedMessage": "U2FsdGVkX1+vupppZksvRf5pq5g5XjFRIipRkwB0K1Y="
+    },
+    "receiveMessage": {
+      "type": "message",
+      "encryptedMessage": "U2FsdGVkX1+vupppZksvRf5pq5g5XjFRIipRkwB0K1Y="
+    },
+    "error": {
+      "type": "error",
+      "message": "服务器错误"
+    }
+  }
+}

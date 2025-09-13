@@ -1,0 +1,29 @@
+name = "web-tools-frontend"
+compatibility_date = "2024-01-01"
+
+[env.production]
+name = "web-tools-frontend"
+
+[env.staging]
+name = "web-tools-frontend-staging"
+
+# 静态资源配置
+[[pages]]
+name = "web-tools"
+source = "."
+
+# 重定向规则
+[[redirects]]
+from = "/pic/*"
+to = "/pic/index.html"
+status = 200
+
+[[redirects]]
+from = "/copy/*"
+to = "/copy/index.html"
+status = 200
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
