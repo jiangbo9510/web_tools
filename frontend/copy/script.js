@@ -1,5 +1,6 @@
 class SecureTextTransmitter {
     constructor() {
+        console.log('SecureTextTransmitter 构造函数开始');
         this.key = null;
         this.keyHash = null;
         this.ws = null;
@@ -7,28 +8,60 @@ class SecureTextTransmitter {
         this.currentLanguage = 'zh';
         this.config = null;
         this.initializeElements();
+        console.log('元素初始化完成');
+        this.initializeLanguage();
+        console.log('语言初始化完成');
         this.bindEvents();
+        console.log('事件绑定完成');
         this.loadConfig();
+        console.log('SecureTextTransmitter 构造函数完成');
     }
 
     async loadConfig() {
         try {
             const response = await fetch('/config.json');
             this.config = await response.json();
+            
+            // 如果配置中有backend信息，构建WebSocket URL
+            if (this.config.backend) {
+                const { host, port, protocol } = this.config.backend;
+                const wsProtocol = protocol === 'wss' ? 'wss' : 'ws';
+                this.config.websocket.url = `${wsProtocol}://${host}:${port}/ws`;
+            }
+            
+            // 如果配置中有copy配置，使用copy配置中的后端信息
+            if (this.config.copy) {
+                const { backendDomain, websocketPath } = this.config.copy;
+                const wsProtocol = this.config.backend?.protocol === 'wss' ? 'wss' : 'ws';
+                this.config.websocket.url = `${wsProtocol}://${backendDomain}${websocketPath}`;
+            }
+            
+            console.log('配置加载成功:', this.config);
         } catch (error) {
             console.warn('无法加载配置文件，使用默认配置:', error);
             this.config = {
+                backend: {
+                    host: 'localhost',
+                    port: 8080,
+                    protocol: 'ws'
+                },
                 websocket: {
                     url: 'ws://localhost:8080/ws',
                     fallbackUrl: 'ws://localhost:8080/ws',
                     reconnectInterval: 3000,
                     maxReconnectAttempts: 5
+                },
+                copy: {
+                    backendDomain: 'localhost:8080',
+                    websocketPath: '/ws',
+                    apiPath: '/api'
                 }
             };
         }
     }
 
     initializeElements() {
+        console.log('开始初始化元素');
         this.keyInput = document.getElementById('keyInput');
         this.setKeyBtn = document.getElementById('setKeyBtn');
         this.clearKeyBtn = document.getElementById('clearKeyBtn');
@@ -41,6 +74,21 @@ class SecureTextTransmitter {
         this.receivedSection = document.getElementById('receivedSection');
         this.messagesContainer = document.getElementById('messagesContainer');
         this.langToggle = document.getElementById('langToggle');
+        
+        console.log('元素初始化结果:', {
+            keyInput: !!this.keyInput,
+            setKeyBtn: !!this.setKeyBtn,
+            clearKeyBtn: !!this.clearKeyBtn,
+            keyStatus: !!this.keyStatus,
+            connectionSection: !!this.connectionSection,
+            connectionStatus: !!this.connectionStatus,
+            messageSection: !!this.messageSection,
+            messageInput: !!this.messageInput,
+            sendBtn: !!this.sendBtn,
+            receivedSection: !!this.receivedSection,
+            messagesContainer: !!this.messagesContainer,
+            langToggle: !!this.langToggle
+        });
     }
 
     bindEvents() {
@@ -171,9 +219,14 @@ class SecureTextTransmitter {
     }
 
     setKey() {
+        console.log('setKey 方法被调用');
         const keyValue = this.keyInput.value.trim();
-        if (!keyValue) return;
+        if (!keyValue) {
+            console.log('密钥为空，退出');
+            return;
+        }
 
+        console.log('设置密钥:', keyValue);
         this.key = keyValue;
         this.keyHash = CryptoJS.MD5(keyValue).toString();
         
@@ -185,12 +238,46 @@ class SecureTextTransmitter {
         
         // 更新状态
         this.keyStatus.classList.add('connected');
-        this.keyStatus.querySelector('.status-text').textContent = this.translations[this.currentLanguage].keySet;
+        if (this.translations && this.translations[this.currentLanguage]) {
+            this.keyStatus.querySelector('.status-text').textContent = this.translations[this.currentLanguage].keySet;
+        } else {
+            this.keyStatus.querySelector('.status-text').textContent = '密钥已设置';
+        }
+        
+        // 检查元素是否存在
+        console.log('检查元素:', {
+            connectionSection: this.connectionSection,
+            messageSection: this.messageSection,
+            receivedSection: this.receivedSection
+        });
         
         // 显示连接部分
-        this.connectionSection.style.display = 'block';
-        this.messageSection.style.display = 'block';
-        this.receivedSection.style.display = 'block';
+        if (this.connectionSection) {
+            this.connectionSection.style.display = 'block';
+            console.log('连接面板已显示');
+        } else {
+            console.error('connectionSection 元素未找到');
+        }
+        
+        if (this.messageSection) {
+            this.messageSection.style.display = 'block';
+            console.log('消息面板已显示');
+        } else {
+            console.error('messageSection 元素未找到');
+        }
+        
+        if (this.receivedSection) {
+            this.receivedSection.style.display = 'block';
+            console.log('接收面板已显示');
+        } else {
+            console.error('receivedSection 元素未找到');
+        }
+        
+        console.log('面板显示状态:', {
+            connectionSection: this.connectionSection ? this.connectionSection.style.display : '元素不存在',
+            messageSection: this.messageSection ? this.messageSection.style.display : '元素不存在',
+            receivedSection: this.receivedSection ? this.receivedSection.style.display : '元素不存在'
+        });
         
         // 尝试连接WebSocket
         this.connectWebSocket();
@@ -209,7 +296,11 @@ class SecureTextTransmitter {
         
         // 更新状态
         this.keyStatus.classList.remove('connected');
-        this.keyStatus.querySelector('.status-text').textContent = this.translations[this.currentLanguage].noKey;
+        if (this.translations && this.translations[this.currentLanguage]) {
+            this.keyStatus.querySelector('.status-text').textContent = this.translations[this.currentLanguage].noKey;
+        } else {
+            this.keyStatus.querySelector('.status-text').textContent = '未设置密钥';
+        }
         
         // 断开WebSocket连接
         this.disconnectWebSocket();
@@ -341,8 +432,46 @@ class SecureTextTransmitter {
                 console.error('解密消息失败:', error);
                 this.addMessage(this.translations[this.currentLanguage].decryptFailed, 'error');
             }
+        } else if (data.type === 'copy_response') {
+            // 处理复制响应
+            if (data.success) {
+                this.addMessage(data.message || '复制成功', 'success');
+            } else {
+                this.addMessage(data.message || '复制失败', 'error');
+            }
         } else if (data.type === 'error') {
             this.addMessage(data.message || this.translations[this.currentLanguage].serverError, 'error');
+        }
+    }
+
+    // 发送复制请求
+    sendCopyRequest(content, contentType = 'text') {
+        if (!this.isConnected) {
+            this.addMessage('请先连接到服务器', 'error');
+            return;
+        }
+
+        if (!content) {
+            this.addMessage('复制内容不能为空', 'error');
+            return;
+        }
+
+        try {
+            // 使用密钥加密内容
+            const encryptedContent = CryptoJS.AES.encrypt(content, this.key).toString();
+            
+            // 发送复制请求
+            this.ws.send(JSON.stringify({
+                type: 'copy',
+                keyHash: this.keyHash,
+                encryptedContent: encryptedContent,
+                contentType: contentType
+            }));
+            
+            this.addMessage('复制请求已发送', 'success');
+        } catch (error) {
+            console.error('发送复制请求失败:', error);
+            this.addMessage('发送复制请求失败', 'error');
         }
     }
 

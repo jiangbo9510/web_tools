@@ -1,0 +1,22 @@
+{
+  "server": {
+    "port": "8080",
+    "host": "0.0.0.0"
+  },
+  "websocket": {
+    "path": "/ws",
+    "maxConnections": 1000,
+    "readBufferSize": 1024,
+    "writeBufferSize": 1024
+  },
+  "cors": {
+    "allowedOrigins": ["*"],
+    "allowedMethods": ["GET", "POST", "OPTIONS"],
+    "allowedHeaders": ["Content-Type", "Authorization"]
+  },
+  "logging": {
+    "level": "info",
+    "enableConsole": true,
+    "enableFile": false
+  }
+}

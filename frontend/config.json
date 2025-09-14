@@ -1,17 +1,30 @@
 {
+  "backend": {
+    "host": "localhost",
+    "port": 8080,
+    "protocol": "ws",
+    "domain": "localhost:8080",
+    "path": "/ws"
+  },
   "websocket": {
-    "url": "wss://your-backend-domain.com/ws",
+    "url": "ws://localhost:8080/ws",
     "fallbackUrl": "ws://localhost:8080/ws",
     "reconnectInterval": 3000,
     "maxReconnectAttempts": 5
   },
   "api": {
-    "baseUrl": "https://your-backend-domain.com",
-    "fallbackUrl": "http://localhost:8080"
+    "baseUrl": "http://localhost:8080",
+    "fallbackUrl": "http://localhost:8080",
+    "healthCheck": "/health"
   },
   "features": {
     "enableEncryption": true,
     "enableReconnect": true,
     "enableLogging": false
+  },
+  "copy": {
+    "backendDomain": "localhost:8080",
+    "websocketPath": "/ws",
+    "apiPath": "/api"
   }
 }
