@@ -1,0 +1,70 @@
+{
+  "translation": {
+    "common": {
+      "loading": "Loading...",
+      "error": "Error",
+      "success": "Success",
+      "download": "Download",
+      "upload": "Upload",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "close": "Close"
+    },
+    "header": {
+      "language": "Language"
+    },
+    "home": {
+      "title": "Multi-Function Online Toolbox",
+      "description": "Free, Secure, and Efficient Online Tool Collection",
+      "tools": {
+        "imageSplitter": {
+          "title": "Image Splitter",
+          "description": "Split images into grids locally in your browser - no upload needed"
+        },
+        "clipboard": {
+          "title": "Cross-Device Cloud Clipboard",
+          "description": "Secure, real-time cross-platform text sync with E2E encryption"
+        }
+      }
+    },
+    "imageSplitter": {
+      "title": "Online Image Splitter - Free Grid Cutter",
+      "description": "Split images into grids locally in your browser without upload. Support any image size, one-click download all pieces.",
+      "selectGrid": "Select Grid",
+      "gridSize": "Grid Size",
+      "selectImage": "Select Image",
+      "uploadImage": "Click or drag to upload image",
+      "preview": "Preview",
+      "downloadAll": "Download All Pieces",
+      "processing": "Processing...",
+      "downloadSuccess": "Download successful",
+      "downloadError": "Download failed",
+      "selectImageFirst": "Please select an image first",
+      "selectGridFirst": "Please select grid size first"
+    },
+    "clipboard": {
+      "title": "Cross-Device Cloud Clipboard - E2EE",
+      "description": "Secure, real-time cross-platform text synchronization tool. End-to-end encryption with keys stored locally only.",
+      "step1": "1. Set Key",
+      "step2": "2. Connection Status",
+      "step3": "3. Send Message",
+      "step4": "4. Received Messages",
+      "keyPlaceholder": "Enter key (letters and numbers only)",
+      "setKey": "Set Key",
+      "clearKey": "Clear Key",
+      "noKey": "No key set",
+      "keySet": "Key set",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "connecting": "Connecting...",
+      "disconnected": "Disconnected",
+      "messagePlaceholder": "Enter text content to transfer",
+      "sendMessage": "Send Message",
+      "noMessages": "No messages",
+      "copySuccess": "Copied successfully",
+      "copyError": "Failed to copy",
+      "invalidKey": "Invalid key format, only letters and numbers are allowed",
+      "toolDesc": "Real-time communication based on WebSocket, supporting encrypted key transmission and multi-client message forwarding. A secure and reliable multi-device text transfer solution."
+    }
+  }
+}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -430,7 +429,7 @@ func (c *Client) broadcastToSameKey(msg Message) {
 }
 
 // generateKeyHash 生成密钥哈希
-func generateKeyHash(key string) string {
-	hash := md5.Sum([]byte(key))
-	return fmt.Sprintf("%x", hash)
-}
+// func generateKeyHash(key string) string {
+// 	hash := md5.Sum([]byte(key))
+// 	return fmt.Sprintf("%x", hash)
+// }
