@@ -62,6 +62,7 @@ node_modules/
 # Build outputs
 dist/
 build/
+frontend/dist/
 
 # Temporary files
 tmp/
