@@ -9,8 +9,7 @@ import {
   Download,
   X,
   Image as ImageIcon,
-  Check,
-  Wand2
+  Check
 } from 'lucide-react';
 
 interface SelectedGrid {
