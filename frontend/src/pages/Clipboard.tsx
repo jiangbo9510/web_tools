@@ -57,18 +57,24 @@ export const Clipboard = () => {
 
   const connectWebSocket = (hash: string) => {
     const wsUrl = getWebSocketUrl();
+    console.log('Connecting to WebSocket:', wsUrl);
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
+      console.log('WebSocket connected');
       setIsConnected(true);
-      ws.send(JSON.stringify({
+      const registerData = {
         type: 'register',
         keyHash: hash,
-      }));
+      };
+      console.log('Sending register:', registerData);
+      ws.send(JSON.stringify(registerData));
+      addMessage(t('clipboard.connected'), 'success');
     };
 
     ws.onmessage = (event) => {
       try {
+        console.log('Received message:', event.data);
         const data = JSON.parse(event.data);
         handleWebSocketMessage(data);
       } catch (error) {
@@ -77,11 +83,14 @@ export const Clipboard = () => {
     };
 
     ws.onclose = () => {
+      console.log('WebSocket disconnected');
       setIsConnected(false);
+      addMessage(t('clipboard.notConnected'), 'error');
       // Auto reconnect after 3 seconds if key is still set
       if (isKeySet) {
         setTimeout(() => {
           if (keyHash) {
+            console.log('Attempting to reconnect...');
             connectWebSocket(keyHash);
           }
         }, 3000);
@@ -90,7 +99,7 @@ export const Clipboard = () => {
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
-      addMessage(t('clipboard.toolDesc'), 'error');
+      addMessage(t('clipboard.connectionError') || 'Connection error', 'error');
     };
 
     wsRef.current = ws;
@@ -115,8 +124,9 @@ export const Clipboard = () => {
   };
 
   const handleSendMessage = () => {
-    if (!isConnected) {
-      addMessage('Please connect first', 'error');
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      addMessage(t('clipboard.notConnected'), 'error');
+      setIsConnected(false);
       return;
     }
 
@@ -128,17 +138,20 @@ export const Clipboard = () => {
     try {
       const encryptedMessage = CryptoJS.AES.encrypt(trimmedMessage, key).toString();
 
-      wsRef.current?.send(JSON.stringify({
+      const messageData = {
         type: 'message',
         keyHash: keyHash,
         encryptedMessage: encryptedMessage,
-      }));
+      };
+
+      console.log('Sending message:', messageData);
+      wsRef.current.send(JSON.stringify(messageData));
 
       addMessage(trimmedMessage, 'sent');
       setMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
-      addMessage('Failed to send message', 'error');
+      addMessage(t('clipboard.sendFailed') || 'Failed to send message', 'error');
     }
   };
 

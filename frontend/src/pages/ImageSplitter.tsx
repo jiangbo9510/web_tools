@@ -8,23 +8,37 @@ import { Download, Upload } from 'lucide-react';
 export const ImageSplitter = () => {
   const { t } = useTranslation();
   const [selectedGrid, setSelectedGrid] = useState<{ rows: number; cols: number } | null>(null);
+  const [hoveredGrid, setHoveredGrid] = useState<{ rows: number; cols: number } | null>(null);
   const [previews, setPreviews] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 检查格子是否在悬停范围内 (从1,1到悬停位置)
+  const isInHoverRange = (row: number, col: number) => {
+    if (!hoveredGrid) return false;
+    return row <= hoveredGrid.rows && col <= hoveredGrid.cols;
+  };
 
   // 生成 5x5 网格选择器
   const renderGridSelector = () => {
     const grids = [];
     for (let row = 1; row <= 5; row++) {
       for (let col = 1; col <= 5; col++) {
+        const isSelected = selectedGrid?.rows === row && selectedGrid?.cols === col;
+        const isHovered = isInHoverRange(row, col);
+
         grids.push(
           <button
             key={`${row}-${col}`}
             onClick={() => handleGridSelect(row, col)}
+            onMouseEnter={() => setHoveredGrid({ rows: row, cols: col })}
+            onMouseLeave={() => setHoveredGrid(null)}
             className={`w-16 h-16 border-2 rounded-lg transition-all ${
-              selectedGrid?.rows === row && selectedGrid?.cols === col
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900'
-                : 'border-gray-300 hover:border-blue-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              isSelected
+                ? 'border-blue-500 bg-blue-100 dark:bg-blue-900'
+                : isHovered
+                ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/50'
+                : 'border-gray-300 hover:border-blue-300 dark:border-gray-600'
             }`}
           >
             <div className="text-sm font-medium">{row}×{col}</div>
