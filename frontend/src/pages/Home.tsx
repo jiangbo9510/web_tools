@@ -29,21 +29,20 @@ export const Home = () => {
         description={t('home.description')}
       />
 
-      {/* Header */}
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 py-16">
-        {/* Title */}
-        <div className="w-full max-w-2xl mx-auto text-center mb-16">
+      {/* Content pinned to top */}
+      <div className="px-6 py-16 max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-[#111111] mb-4">
             {t('home.title')}
           </h1>
-
           <p className="text-lg text-[#666666] leading-relaxed">
             {t('home.description')}
           </p>
         </div>
 
         {/* Tools Grid - Two Large Cards Side by Side */}
-        <div className="grid grid-cols-2 gap-8 w-full max-w-4xl">
+        <div className="grid grid-cols-2 gap-8">
           {tools.map((tool, index) => (
             <a
               key={index}

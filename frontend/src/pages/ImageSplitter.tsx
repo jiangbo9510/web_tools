@@ -28,7 +28,7 @@ export const ImageSplitter = () => {
   const [imageName, setImageName] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const gridSize = 5; // 5x5 fixed grid
+  const gridSize = 5;
 
   const getExtension = (mimeType: string): string => {
     const map: Record<string, string> = {
@@ -129,12 +129,10 @@ export const ImageSplitter = () => {
 
     splitResults.forEach((dataUrl, index) => {
       const base64 = dataUrl.split(',')[1];
-      // Numbered filename: 1.jpg, 2.jpg, etc.
       zip.file(`${index + 1}.${ext}`, base64, { base64: true });
     });
 
     const blob = await zip.generateAsync({ type: 'blob' });
-    // Zip filename: originalname-timestamp.zip
     saveAs(blob, `${imageName}-${timestamp}.zip`);
     setIsProcessing(false);
   };
@@ -148,7 +146,6 @@ export const ImageSplitter = () => {
     }
   };
 
-  // Check if cell should be highlighted (from 0,0 to hovered)
   const isHighlighted = (row: number, col: number) => {
     if (!hoveredGrid) return false;
     return row <= hoveredGrid.rows && col <= hoveredGrid.cols;
@@ -161,27 +158,19 @@ export const ImageSplitter = () => {
         description={t('imageSplitter.description')}
       />
 
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 py-16">
+      <div className="px-6 py-16 max-w-4xl mx-auto">
         {/* Header */}
-        <div className="w-full max-w-md mx-auto text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E5E5E5] mb-6">
-            <Wand2 className="w-3.5 h-3.5 text-[#007AFF]" />
-            <span className="text-xs font-medium text-[#666666]">
-              Image Splitter
-            </span>
-          </div>
-
+        <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-semibold text-[#111111] mb-3">
             {t('imageSplitter.title').split(' - ')[0]}
           </h1>
-
           <p className="text-[#666666]">
             {t('imageSplitter.description')}
           </p>
         </div>
 
         {/* File Upload */}
-        <div className="w-full max-w-md mx-auto mb-8">
+        <div className="mb-8">
           <div
             onClick={() => fileInputRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
@@ -201,7 +190,7 @@ export const ImageSplitter = () => {
                     <ImageIcon className="w-5 h-5 text-[#007AFF]" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-[#111111] truncate max-w-[200px]">
+                    <p className="text-sm font-medium text-[#111111] truncate max-w-[300px]">
                       {imageFile.name}
                     </p>
                     <p className="text-xs text-[#999999]">
@@ -240,85 +229,83 @@ export const ImageSplitter = () => {
           </div>
         </div>
 
-        {/* Grid Selector */}
-        <div className="w-full max-w-md mx-auto mb-8">
-          <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <Grid3X3 className="w-5 h-5 text-[#666666]" />
-              <span className="text-sm font-medium text-[#111111]">
-                Select Grid Size
+        {/* 5x5 Grid Selector - Always Visible */}
+        <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6 mb-8">
+          <div className="flex items-center gap-3 mb-5">
+            <Grid3X3 className="w-5 h-5 text-[#666666]" />
+            <span className="text-sm font-medium text-[#111111]">
+              Select Grid Size
+            </span>
+          </div>
+
+          {/* 5x5 Visual Grid */}
+          <div className="flex justify-center mb-5">
+            <div
+              className="grid gap-1 p-4 bg-[#FAFAFA] rounded-xl border border-[#E5E5E5]"
+              style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
+            >
+              {Array.from({ length: gridSize * gridSize }).map((_, idx) => {
+                const row = Math.floor(idx / gridSize) + 1;
+                const col = (idx % gridSize) + 1;
+                const isSelected = selectedGrid?.rows === row && selectedGrid?.cols === col;
+                const isHovered = isHighlighted(row, col);
+
+                return (
+                  <button
+                    key={idx}
+                    onMouseEnter={() => setHoveredGrid({ rows: row, cols: col })}
+                    onMouseLeave={() => setHoveredGrid(null)}
+                    onClick={() => handleGridSelect(row, col)}
+                    className={`
+                      w-12 h-12 rounded-lg transition-all duration-150 text-sm font-medium
+                      ${isSelected
+                        ? 'bg-[#007AFF] text-white'
+                        : isHovered
+                        ? 'bg-[#E5F0FF] text-[#007AFF]'
+                        : 'bg-white border border-[#E5E5E5] text-[#666666] hover:border-[#007AFF]'
+                      }
+                    `}
+                  >
+                    {isSelected || isHovered ? `${row}×${col}` : ''}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Status */}
+          {selectedGrid ? (
+            <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#F0F9FF] border border-[#007AFF]/20">
+              <Check className="w-4 h-4 text-[#007AFF]" />
+              <span className="text-sm font-medium text-[#007AFF]">
+                {selectedGrid.rows} row × {selectedGrid.cols} col ({selectedGrid.rows * selectedGrid.cols} pieces)
               </span>
             </div>
-
-            {/* 5x5 Visual Grid */}
-            <div className="flex justify-center mb-5">
-              <div
-                className="grid gap-1 p-4 bg-[#FAFAFA] rounded-xl border border-[#E5E5E5]"
-                style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
-              >
-                {Array.from({ length: gridSize * gridSize }).map((_, idx) => {
-                  const row = Math.floor(idx / gridSize) + 1;
-                  const col = (idx % gridSize) + 1;
-                  const isSelected = selectedGrid?.rows === row && selectedGrid?.cols === col;
-                  const isHovered = isHighlighted(row, col);
-
-                  return (
-                    <button
-                      key={idx}
-                      onMouseEnter={() => setHoveredGrid({ rows: row, cols: col })}
-                      onMouseLeave={() => setHoveredGrid(null)}
-                      onClick={() => handleGridSelect(row, col)}
-                      className={`
-                        w-12 h-12 rounded-lg transition-all duration-150 text-sm font-medium
-                        ${isSelected
-                          ? 'bg-[#007AFF] text-white'
-                          : isHovered
-                          ? 'bg-[#E5F0FF] text-[#007AFF]'
-                          : 'bg-white border border-[#E5E5E5] text-[#666666] hover:border-[#007AFF]'
-                        }
-                      `}
-                    >
-                      {isSelected || isHovered ? `${row}×${col}` : ''}
-                    </button>
-                  );
-                })}
-              </div>
+          ) : hoveredGrid ? (
+            <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5]">
+              <Grid3X3 className="w-4 h-4 text-[#666666]" />
+              <span className="text-sm text-[#666666]">
+                {hoveredGrid.rows} row × {hoveredGrid.cols} col
+              </span>
             </div>
-
-            {/* Status */}
-            {selectedGrid ? (
-              <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#F0F9FF] border border-[#007AFF]/20">
-                <Check className="w-4 h-4 text-[#007AFF]" />
-                <span className="text-sm font-medium text-[#007AFF]">
-                  {selectedGrid.rows} row × {selectedGrid.cols} col ({selectedGrid.rows * selectedGrid.cols} pieces)
-                </span>
-              </div>
-            ) : hoveredGrid ? (
-              <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5]">
-                <Grid3X3 className="w-4 h-4 text-[#666666]" />
-                <span className="text-sm text-[#666666]">
-                  {hoveredGrid.rows} row × {hoveredGrid.cols} col
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5]">
-                <span className="text-sm text-[#999999]">Click a cell to select grid size</span>
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5]">
+              <span className="text-sm text-[#999999]">Click a cell to select grid size</span>
+            </div>
+          )}
         </div>
 
         {/* Processing State */}
         {isProcessing && (
-          <div className="mb-8 flex items-center gap-2 text-[#666666]">
+          <div className="mb-8 flex items-center justify-center gap-2 text-[#666666]">
             <div className="w-5 h-5 border-2 border-[#E5E5E5] border-t-[#007AFF] rounded-full animate-spin" />
             <span className="text-sm">Processing...</span>
           </div>
         )}
 
-        {/* Results */}
-        {splitResults.length > 0 && !isProcessing && (
-          <div className="w-full max-w-md mx-auto">
+        {/* Results - Displayed in user's selected format */}
+        {splitResults.length > 0 && !isProcessing && selectedGrid && (
+          <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-[#111111]">
@@ -338,19 +325,23 @@ export const ImageSplitter = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-5 gap-2">
+            {/* Grid displayed in user's selected format (rows x cols) */}
+            <div
+              className="grid gap-2"
+              style={{
+                gridTemplateColumns: `repeat(${selectedGrid.cols}, minmax(0, 1fr))`
+              }}
+            >
               {splitResults.map((result, index) => (
-                <div key={index} className="relative group">
+                <div key={index} className="space-y-1">
                   <img
                     src={result}
                     alt={`Piece ${index + 1}`}
                     className="w-full aspect-square object-cover rounded-lg border border-[#E5E5E5]"
                   />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                    <span className="text-xs text-white font-medium">
-                      {index + 1}
-                    </span>
-                  </div>
+                  <p className="text-xs text-[#666666] text-center">
+                    {index + 1}
+                  </p>
                 </div>
               ))}
             </div>
@@ -358,7 +349,7 @@ export const ImageSplitter = () => {
         )}
 
         {/* Footer */}
-        <p className="mt-16 text-xs text-[#999999]">
+        <p className="text-center text-xs text-[#999999]">
           All tools run locally in your browser
         </p>
       </div>
