@@ -41,7 +41,7 @@ export const ImageSplitter = () => {
                 ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 scale-105 border-2 border-blue-600'
                 : isHovered
                 ? 'bg-blue-100 dark:bg-blue-900/50 border-2 border-blue-500 dark:border-blue-500'
-                : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700'
+                : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
             }`}
             aria-label={`Select ${row}x${col} grid`}
           >
@@ -143,7 +143,7 @@ export const ImageSplitter = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <SEO
         title={t('imageSplitter.title')}
         description={t('imageSplitter.description')}
@@ -152,7 +152,7 @@ export const ImageSplitter = () => {
       <div className="container mx-auto px-6 py-12 max-w-7xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-800 mb-6 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-700 mb-6 shadow-sm">
             <Grid3x3 className="w-4 h-4 text-blue-600" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               图片切分工具
@@ -171,7 +171,7 @@ export const ImageSplitter = () => {
         </div>
 
         {/* Grid Selection */}
-        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-8 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 mb-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-blue-50 dark:bg-blue-950 rounded-lg flex items-center justify-center">
               <Grid3x3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -188,7 +188,7 @@ export const ImageSplitter = () => {
 
           {/* 8x8 Interactive Grid Selector */}
           <div className="flex justify-center mb-6">
-            <div className="inline-grid grid-cols-8 gap-1 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-800">
+            <div className="inline-grid grid-cols-8 gap-1 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
               {renderGridSelector()}
             </div>
           </div>
@@ -214,7 +214,7 @@ export const ImageSplitter = () => {
         </div>
 
         {/* Image Upload */}
-        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-8 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 mb-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-950 rounded-lg flex items-center justify-center">
               <Upload className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -269,7 +269,7 @@ export const ImageSplitter = () => {
 
         {/* Preview and Download */}
         {previews.length > 0 && (
-          <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8">
             <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-purple-50 dark:bg-purple-950 rounded-lg flex items-center justify-center">
@@ -307,7 +307,7 @@ export const ImageSplitter = () => {
             <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4">
               {previews.map((preview, index) => (
                 <div key={index} className="relative group">
-                  <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-800 group-hover:border-blue-400 dark:group-hover:border-blue-600 transition-colors">
+                  <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 group-hover:border-blue-400 dark:group-hover:border-blue-600 transition-colors">
                     <img
                       src={preview}
                       alt={`Piece ${index + 1}`}
@@ -324,7 +324,7 @@ export const ImageSplitter = () => {
             </div>
 
             {/* Download Info */}
-            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
               <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                 📦 下载文件名格式: 001.{imageFormat === 'image/jpeg' ? 'jpg' :
                                       imageFormat === 'image/webp' ? 'webp' :

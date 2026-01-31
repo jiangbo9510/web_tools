@@ -27,7 +27,7 @@ export const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <SEO
         title={t('home.title')}
         description={t('home.description')}
@@ -36,7 +36,7 @@ export const Home = () => {
       {/* Hero Section */}
       <div className="container mx-auto px-6 py-20 md:py-32">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-800 mb-8 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700 mb-8 shadow-sm">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               在线工具集合
@@ -44,7 +44,7 @@ export const Home = () => {
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
-            <span className="bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 dark:from-white dark:via-gray-200 dark:to-white bg-clip-text text-transparent">
               {t('home.title')}
             </span>
           </h1>
@@ -60,7 +60,7 @@ export const Home = () => {
             <a
               key={index}
               href={tool.link}
-              className="group relative bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 hover:-translate-y-1 overflow-hidden"
+              className="group relative bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-gray-200/50 dark:hover:shadow-black/20 hover:-translate-y-1 overflow-hidden"
             >
               {/* Gradient Background on Hover */}
               <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />

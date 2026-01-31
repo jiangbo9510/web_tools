@@ -182,7 +182,7 @@ export const Clipboard = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <SEO
         title={t('clipboard.title')}
         description={t('clipboard.description')}
@@ -191,7 +191,7 @@ export const Clipboard = () => {
       <div className="container mx-auto px-6 py-12 max-w-5xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-800 mb-6 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-700 mb-6 shadow-sm">
             <Lock className="w-4 h-4 text-emerald-600" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               端到端加密
@@ -210,7 +210,7 @@ export const Clipboard = () => {
         </div>
 
         {/* Step 1: Set Key */}
-        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-8 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 mb-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-blue-50 dark:bg-blue-950 rounded-lg flex items-center justify-center">
               <Key className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -238,7 +238,7 @@ export const Clipboard = () => {
               }}
               disabled={isKeySet}
               placeholder={t('clipboard.keyPlaceholder')}
-              className="flex-1 px-4 py-3 border-2 border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white disabled:bg-gray-50 dark:disabled:bg-gray-900 disabled:text-gray-500 transition-colors"
+              className="flex-1 px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white disabled:bg-gray-50 dark:disabled:bg-gray-900 disabled:text-gray-500 transition-colors"
               maxLength={50}
             />
             {!isKeySet ? (
@@ -270,7 +270,7 @@ export const Clipboard = () => {
         {isKeySet && (
           <>
             {/* Step 2: Connection Status */}
-            <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-8 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 mb-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-950 rounded-lg flex items-center justify-center">
                   <Wifi className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -285,7 +285,7 @@ export const Clipboard = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+              <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
                 <span className={`font-medium ${isConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                   {isConnected ? t('clipboard.connected') : t('clipboard.notConnected')}
@@ -294,7 +294,7 @@ export const Clipboard = () => {
             </div>
 
             {/* Step 3: Send Message */}
-            <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-8 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 mb-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-purple-50 dark:bg-purple-950 rounded-lg flex items-center justify-center">
                   <MessageSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -319,7 +319,7 @@ export const Clipboard = () => {
                     }
                   }}
                   placeholder={t('clipboard.messagePlaceholder')}
-                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none transition-colors"
                   rows={4}
                 />
 
@@ -340,7 +340,7 @@ export const Clipboard = () => {
             </div>
 
             {/* Step 4: Messages */}
-            <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-8">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-orange-50 dark:bg-orange-950 rounded-lg flex items-center justify-center">
                   <MessageSquare className="w-5 h-5 text-orange-600 dark:text-orange-400" />
