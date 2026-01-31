@@ -168,8 +168,8 @@ export const ImageSplitter = () => {
           </p>
         </div>
 
-        {/* 5x5 Grid Selector - At the Top */}
-        <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6 mb-8">
+        {/* 5x5 Grid Selector - Sticky at Top */}
+        <div className="sticky top-6 z-10 bg-white border border-[#E5E5E5] rounded-2xl p-6 mb-8 shadow-sm">
           <div className="flex items-center gap-3 mb-5">
             <Grid3X3 className="w-5 h-5 text-[#666666]" />
             <span className="text-sm font-medium text-[#111111]">
@@ -217,14 +217,14 @@ export const ImageSplitter = () => {
             <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#F0F9FF] border border-[#007AFF]/20">
               <Check className="w-4 h-4 text-[#007AFF]" />
               <span className="text-sm font-medium text-[#007AFF]">
-                {selectedGrid.rows} row × {selectedGrid.cols} col ({selectedGrid.rows * selectedGrid.cols} pieces)
+                {selectedGrid.cols}×{selectedGrid.rows} ({selectedGrid.rows * selectedGrid.cols} pieces)
               </span>
             </div>
           ) : hoveredGrid ? (
             <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5]">
               <Grid3X3 className="w-4 h-4 text-[#666666]" />
               <span className="text-sm text-[#666666]">
-                {hoveredGrid.rows} row × {hoveredGrid.cols} col
+                {hoveredGrid.cols}×{hoveredGrid.rows}
               </span>
             </div>
           ) : (
@@ -305,28 +305,18 @@ export const ImageSplitter = () => {
         {/* Results - Displayed in user's selected format */}
         {splitResults.length > 0 && !isProcessing && selectedGrid && (
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-[#111111]">
-                  {splitResults.length} pieces
-                </span>
-                <span className="text-xs px-2 py-0.5 rounded bg-[#FAFAFA] text-[#666666] border border-[#E5E5E5]">
-                  {getExtension(imageFile?.type || 'image/png').toUpperCase()}
-                </span>
-              </div>
-
-              <button
-                onClick={handleDownload}
-                className="flex items-center gap-2 px-4 py-2 bg-[#111111] text-white rounded-lg text-sm font-medium hover:scale-105 transition-transform"
-              >
-                <Download className="w-4 h-4" />
-                Download ZIP
-              </button>
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="text-sm font-medium text-[#111111]">
+                {splitResults.length} pieces
+              </span>
+              <span className="text-xs px-2 py-0.5 rounded bg-[#FAFAFA] text-[#666666] border border-[#E5E5E5]">
+                {getExtension(imageFile?.type || 'image/png').toUpperCase()}
+              </span>
             </div>
 
             {/* Grid displayed in user's selected format (cols x rows) */}
             <div
-              className="grid gap-2"
+              className="grid gap-2 mb-8"
               style={{
                 gridTemplateColumns: `repeat(${selectedGrid.cols}, minmax(0, 1fr))`
               }}
@@ -343,6 +333,17 @@ export const ImageSplitter = () => {
                   </p>
                 </div>
               ))}
+            </div>
+
+            {/* Download Button - Centered at Bottom */}
+            <div className="flex justify-center">
+              <button
+                onClick={handleDownload}
+                className="flex items-center gap-2 px-6 py-3 bg-white border border-[#E5E5E5] rounded-xl text-sm font-medium text-[#111111] hover:border-[#111111] hover:scale-105 transition-all"
+              >
+                <Download className="w-4 h-4" />
+                Download ZIP
+              </button>
             </div>
           </div>
         )}
