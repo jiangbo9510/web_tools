@@ -168,67 +168,7 @@ export const ImageSplitter = () => {
           </p>
         </div>
 
-        {/* File Upload */}
-        <div className="mb-8">
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            className={`
-              relative bg-white border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-all duration-200
-              ${imageFile
-                ? 'border-[#E5E5E5] hover:border-[#999999]'
-                : 'border-[#E5E5E5] hover:border-[#007AFF]'
-              }
-            `}
-          >
-            {imageFile ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#F0F9FF] flex items-center justify-center">
-                    <ImageIcon className="w-5 h-5 text-[#007AFF]" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-[#111111] truncate max-w-[300px]">
-                      {imageFile.name}
-                    </p>
-                    <p className="text-xs text-[#999999]">
-                      {getExtension(imageFile.type).toUpperCase()}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); resetImage(); }}
-                  className="p-2 hover:bg-[#F5F5F5] rounded-lg transition-colors"
-                >
-                  <X className="w-4 h-4 text-[#666666]" />
-                </button>
-              </div>
-            ) : (
-              <div className="text-center py-2">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#FAFAFA] flex items-center justify-center border border-[#E5E5E5]">
-                  <Upload className="w-5 h-5 text-[#666666]" />
-                </div>
-                <p className="text-[#111111] font-medium mb-1">
-                  Click or drag to upload
-                </p>
-                <p className="text-sm text-[#999999]">
-                  JPG, PNG, WebP, GIF
-                </p>
-              </div>
-            )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleInputChange}
-              className="hidden"
-            />
-          </div>
-        </div>
-
-        {/* 5x5 Grid Selector - Always Visible */}
+        {/* 5x5 Grid Selector - At the Top */}
         <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6 mb-8">
           <div className="flex items-center gap-3 mb-5">
             <Grid3X3 className="w-5 h-5 text-[#666666]" />
@@ -294,6 +234,66 @@ export const ImageSplitter = () => {
           )}
         </div>
 
+        {/* File Upload */}
+        <div className="mb-8">
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+            className={`
+              relative bg-white border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-all duration-200
+              ${imageFile
+                ? 'border-[#E5E5E5] hover:border-[#999999]'
+                : 'border-[#E5E5E5] hover:border-[#007AFF]'
+              }
+            `}
+          >
+            {imageFile ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#F0F9FF] flex items-center justify-center">
+                    <ImageIcon className="w-5 h-5 text-[#007AFF]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[#111111] truncate max-w-[300px]">
+                      {imageFile.name}
+                    </p>
+                    <p className="text-xs text-[#999999]">
+                      {getExtension(imageFile.type).toUpperCase()}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); resetImage(); }}
+                  className="p-2 hover:bg-[#F5F5F5] rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4 text-[#666666]" />
+                </button>
+              </div>
+            ) : (
+              <div className="text-center py-2">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#FAFAFA] flex items-center justify-center border border-[#E5E5E5]">
+                  <Upload className="w-5 h-5 text-[#666666]" />
+                </div>
+                <p className="text-[#111111] font-medium mb-1">
+                  Click or drag to upload
+                </p>
+                <p className="text-sm text-[#999999]">
+                  JPG, PNG, WebP, GIF
+                </p>
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleInputChange}
+              className="hidden"
+            />
+          </div>
+        </div>
+
         {/* Processing State */}
         {isProcessing && (
           <div className="mb-8 flex items-center justify-center gap-2 text-[#666666]">
@@ -324,7 +324,7 @@ export const ImageSplitter = () => {
               </button>
             </div>
 
-            {/* Grid displayed in user's selected format (rows x cols) */}
+            {/* Grid displayed in user's selected format (cols x rows) */}
             <div
               className="grid gap-2"
               style={{
