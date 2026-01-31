@@ -64,6 +64,8 @@
       "copySuccess": "Copied successfully",
       "copyError": "Failed to copy",
       "invalidKey": "Invalid key format, only letters and numbers are allowed",
+      "connectionError": "Connection failed, please check network or try again later",
+      "sendFailed": "Failed to send, please try again",
       "toolDesc": "Real-time communication based on WebSocket, supporting encrypted key transmission and multi-client message forwarding. A secure and reliable multi-device text transfer solution."
     }
   }
