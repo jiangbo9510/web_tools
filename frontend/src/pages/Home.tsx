@@ -10,14 +10,14 @@ export const Home = () => {
       title: t('home.tools.imageSplitter.title'),
       description: t('home.tools.imageSplitter.description'),
       icon: Scissors,
-      link: 'https://pic.your-domain.com',
+      link: 'https://pic.web-tools.work',
       color: 'bg-blue-500',
     },
     {
       title: t('home.tools.clipboard.title'),
       description: t('home.tools.clipboard.description'),
       icon: Clipboard,
-      link: 'https://copy.your-domain.com',
+      link: 'https://copy.web-tools.work',
       color: 'bg-green-500',
     },
   ];
