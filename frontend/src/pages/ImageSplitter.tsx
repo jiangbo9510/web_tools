@@ -1,340 +1,371 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { Download, Upload, Grid3x3, Sparkles } from 'lucide-react';
+import {
+  Upload,
+  Grid3X3,
+  Download,
+  X,
+  Image as ImageIcon,
+  Check,
+  Wand2
+} from 'lucide-react';
+
+interface SelectedGrid {
+  rows: number;
+  cols: number;
+}
 
 export const ImageSplitter = () => {
   const { t } = useTranslation();
-  const [selectedGrid, setSelectedGrid] = useState<{ rows: number; cols: number } | null>(null);
-  const [hoveredGrid, setHoveredGrid] = useState<{ rows: number; cols: number } | null>(null);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [selectedGrid, setSelectedGrid] = useState<SelectedGrid | null>(null);
+  const [hoveredGrid, setHoveredGrid] = useState<SelectedGrid | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [splitResults, setSplitResults] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [imageFormat, setImageFormat] = useState<string>('image/png'); // 保存上传图片的格式
+  const [imageName, setImageName] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
-  // 检查格子是否在悬停范围内 (从1,1到悬停位置)
-  const isInHoverRange = (row: number, col: number) => {
-    if (!hoveredGrid) return false;
-    return row <= hoveredGrid.rows && col <= hoveredGrid.cols;
-  };
+  const maxSize = 6;
 
-  // 生成 8x8 交互式网格选择器
-  const renderGridSelector = () => {
-    const grids = [];
-    const maxSize = 8; // 8x8 网格
-
-    for (let row = 1; row <= maxSize; row++) {
-      for (let col = 1; col <= maxSize; col++) {
-        const isSelected = selectedGrid?.rows === row && selectedGrid?.cols === col;
-        const isHovered = isInHoverRange(row, col);
-
-        grids.push(
-          <button
-            key={`${row}-${col}`}
-            onClick={() => handleGridSelect(row, col)}
-            onMouseEnter={() => setHoveredGrid({ rows: row, cols: col })}
-            onMouseLeave={() => setHoveredGrid(null)}
-            className={`relative w-14 h-14 rounded-md transition-all duration-150 ${
-              isSelected
-                ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 scale-105 border-2 border-blue-600'
-                : isHovered
-                ? 'bg-blue-100 dark:bg-blue-900/50 border-2 border-blue-500 dark:border-blue-500'
-                : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
-            }`}
-            aria-label={`Select ${row}x${col} grid`}
-          >
-            {(isSelected || isHovered) && (
-              <div className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`}>
-                {row}×{col}
-              </div>
-            )}
-          </button>
-        );
-      }
-    }
-    return grids;
+  const getExtension = (mimeType: string): string => {
+    const map: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    };
+    return map[mimeType] || 'png';
   };
 
   const handleGridSelect = (rows: number, cols: number) => {
     setSelectedGrid({ rows, cols });
-    setPreviews([]);
+    if (imageFile) {
+      processImage(imageFile, rows, cols);
+    }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // 保存图片格式
-    setImageFormat(file.type || 'image/png');
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        if (selectedGrid) {
-          splitImage(img, selectedGrid.rows, selectedGrid.cols, file.type);
-        }
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const splitImage = (img: HTMLImageElement, rows: number, cols: number, format: string) => {
+  const processImage = useCallback(async (file: File, rows: number, cols: number) => {
     setIsProcessing(true);
-    const pieceWidth = img.width / cols;
-    const pieceHeight = img.height / rows;
-    const pieces: string[] = [];
+    const mimeType = file.type || 'image/png';
 
-    // 确定输出格式和扩展名
-    const mimeType = format || 'image/png';
-    const quality = mimeType === 'image/jpeg' ? 0.95 : undefined; // JPEG 质量
+    const img = new Image();
+    const reader = new FileReader();
 
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const canvas = document.createElement('canvas');
-        canvas.width = pieceWidth;
-        canvas.height = pieceHeight;
-        const ctx = canvas.getContext('2d');
+    reader.onload = (e) => {
+      img.src = e.target?.result as string;
+    };
 
-        if (ctx) {
-          ctx.drawImage(
-            img,
-            col * pieceWidth,
-            row * pieceHeight,
-            pieceWidth,
-            pieceHeight,
-            0,
-            0,
-            pieceWidth,
-            pieceHeight
-          );
-          // 使用原始图片格式导出
-          pieces.push(canvas.toDataURL(mimeType, quality));
+    img.onload = () => {
+      const pieceWidth = Math.ceil(img.width / cols);
+      const pieceHeight = Math.ceil(img.height / rows);
+      const pieces: string[] = [];
+
+      const quality = mimeType === 'image/jpeg' ? 0.95 : undefined;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const canvas = document.createElement('canvas');
+          canvas.width = pieceWidth;
+          canvas.height = pieceHeight;
+          const ctx = canvas.getContext('2d');
+
+          if (ctx) {
+            ctx.drawImage(
+              img,
+              col * (img.width / cols),
+              row * (img.height / rows),
+              img.width / cols,
+              img.height / rows,
+              0,
+              0,
+              pieceWidth,
+              pieceHeight
+            );
+            pieces.push(canvas.toDataURL(mimeType, quality));
+          }
         }
       }
-    }
 
-    setPreviews(pieces);
-    setIsProcessing(false);
+      setSplitResults(pieces);
+      setIsProcessing(false);
+    };
+
+    reader.readAsDataURL(file);
+  }, []);
+
+  const handleFile = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) return;
+
+    setImageFile(file);
+    setImageName(file.name.replace(/\.[^/.]+$/, ''));
+    setImagePreview(URL.createObjectURL(file));
+
+    if (selectedGrid) {
+      processImage(file, selectedGrid.rows, selectedGrid.cols);
+    }
+  }, [selectedGrid, processImage]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
   };
 
   const handleDownload = async () => {
-    if (previews.length === 0) return;
+    if (splitResults.length === 0 || !imageFile) return;
 
     setIsProcessing(true);
     const zip = new JSZip();
+    const ext = getExtension(imageFile.type);
 
-    // 根据格式确定文件扩展名
-    const extension = imageFormat === 'image/jpeg' ? 'jpg' :
-                      imageFormat === 'image/webp' ? 'webp' :
-                      imageFormat === 'image/gif' ? 'gif' : 'png';
-
-    for (let i = 0; i < previews.length; i++) {
-      const base64Data = previews[i].split(',')[1];
-      zip.file(`${String(i + 1).padStart(3, '0')}.${extension}`, base64Data, { base64: true });
-    }
+    splitResults.forEach((dataUrl, index) => {
+      const base64 = dataUrl.split(',')[1];
+      zip.file(`${String(index + 1).padStart(3, '0')}.${ext}`, base64, { base64: true });
+    });
 
     const blob = await zip.generateAsync({ type: 'blob' });
-    saveAs(blob, `split-images-${selectedGrid?.rows}x${selectedGrid?.cols}.zip`);
+    saveAs(blob, `${imageName}-split-${selectedGrid?.rows}x${selectedGrid?.cols}.zip`);
     setIsProcessing(false);
   };
 
+  const resetImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setImageName('');
+    setSplitResults([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A]">
       <SEO
         title={t('imageSplitter.title')}
         description={t('imageSplitter.description')}
       />
 
-      <div className="container mx-auto px-6 py-12 max-w-7xl">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      </div>
+
+      <div className="relative flex flex-col items-center justify-center min-h-screen px-6 py-16">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 rounded-full border border-gray-200 dark:border-gray-700 mb-6 shadow-sm">
-            <Grid3x3 className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              图片切分工具
+        <div className="w-full max-w-2xl mx-auto text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2E2E2E] mb-6">
+            <Wand2 className="w-3.5 h-3.5 text-[#007AFF]" />
+            <span className="text-xs font-medium text-[#666666] dark:text-[#A1A1A1]">
+              Image Splitter
             </span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-            <span className="bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
-              {t('imageSplitter.title').split(' - ')[0]}
-            </span>
+          <h1 className="text-3xl md:text-4xl font-semibold text-[#111111] dark:text-[#EDEDED] mb-3">
+            {t('imageSplitter.title').split(' - ')[0]}
           </h1>
 
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-[#666666] dark:text-[#888888]">
             {t('imageSplitter.description')}
           </p>
         </div>
 
-        {/* Grid Selection */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-950 rounded-lg flex items-center justify-center">
-              <Grid3x3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        {/* Grid Selector */}
+        <div className="w-full max-w-md mx-auto mb-6">
+          <div className="bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2E2E2E] rounded-2xl p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <Grid3X3 className="w-5 h-5 text-[#666666] dark:text-[#A1A1A1]" />
+              <span className="text-sm font-medium text-[#111111] dark:text-[#EDEDED]">
+                Select Grid Size
+              </span>
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t('imageSplitter.selectGrid')}
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-500">
-                鼠标悬停查看，点击锁定网格尺寸
-              </p>
-            </div>
-          </div>
 
-          {/* 8x8 Interactive Grid Selector */}
-          <div className="flex justify-center mb-6">
-            <div className="inline-grid grid-cols-8 gap-1 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
-              {renderGridSelector()}
-            </div>
-          </div>
+            {/* Visual Grid */}
+            <div className="flex justify-center mb-5">
+              <div
+                className="grid gap-1 p-4 bg-[#FAFAFA] dark:bg-[#0A0A0A] rounded-xl border border-[#E5E5E5] dark:border-[#2E2E2E]"
+                style={{ gridTemplateColumns: `repeat(${maxSize}, minmax(0, 1fr))` }}
+              >
+                {Array.from({ length: maxSize * maxSize }).map((_, idx) => {
+                  const row = Math.floor(idx / maxSize) + 1;
+                  const col = (idx % maxSize) + 1;
+                  const isSelected = selectedGrid?.rows === row && selectedGrid?.cols === col;
+                  const isHovered = hoveredGrid && row <= hoveredGrid.rows && col <= hoveredGrid.cols;
 
-          {/* Selection Info */}
-          {hoveredGrid && !selectedGrid && (
-            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-900 w-fit mx-auto">
-              <Grid3x3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <p className="text-sm font-medium text-blue-900 dark:text-blue-300">
-                悬停: {hoveredGrid.rows}行 × {hoveredGrid.cols}列
-              </p>
+                  return (
+                    <button
+                      key={idx}
+                      onMouseEnter={() => setHoveredGrid({ rows: row, cols: col })}
+                      onMouseLeave={() => setHoveredGrid(null)}
+                      onClick={() => handleGridSelect(row, col)}
+                      className={`
+                        w-10 h-10 rounded-md transition-all duration-150 text-xs font-medium
+                        ${isSelected
+                          ? 'bg-[#007AFF] text-white'
+                          : isHovered
+                          ? 'bg-[#E5F0FF] dark:bg-[#1E3A5F] text-[#007AFF] dark:text-[#60A5FA]'
+                          : 'bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2E2E2E] text-[#666666] dark:text-[#A1A1A1] hover:border-[#007AFF] dark:hover:border-[#60A5FA]'
+                        }
+                      `}
+                    >
+                      {isSelected || isHovered ? `${row}×${col}` : ''}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          )}
 
-          {selectedGrid && (
-            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-900 w-fit mx-auto">
-              <Sparkles className="w-4 h-4 text-green-600 dark:text-green-400" />
-              <p className="text-sm font-medium text-green-900 dark:text-green-300">
-                已选择: {selectedGrid.rows}行 × {selectedGrid.cols}列 ({selectedGrid.rows * selectedGrid.cols} 张切片)
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Image Upload */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-950 rounded-lg flex items-center justify-center">
-              <Upload className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t('imageSplitter.selectImage')}
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-500">
-                上传图片进行切分，保持原始格式
-              </p>
-            </div>
-            {imageFormat && previews.length > 0 && (
-              <div className="px-3 py-1 bg-purple-50 dark:bg-purple-950 rounded-lg border border-purple-200 dark:border-purple-900">
-                <span className="text-xs font-medium text-purple-900 dark:text-purple-300">
-                  {imageFormat === 'image/jpeg' ? 'JPEG' :
-                   imageFormat === 'image/png' ? 'PNG' :
-                   imageFormat === 'image/webp' ? 'WebP' :
-                   imageFormat === 'image/gif' ? 'GIF' : '未知格式'}
+            {/* Status */}
+            {selectedGrid ? (
+              <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#F0F9FF] dark:bg-[#1E3A5F] border border-[#007AFF]/20">
+                <Check className="w-4 h-4 text-[#007AFF]" />
+                <span className="text-sm font-medium text-[#007AFF]">
+                  {selectedGrid.rows} row × {selectedGrid.cols} col ({selectedGrid.rows * selectedGrid.cols} pieces)
                 </span>
+              </div>
+            ) : hoveredGrid ? (
+              <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2E2E2E]">
+                <Grid3X3 className="w-4 h-4 text-[#666666]" />
+                <span className="text-sm text-[#666666]">
+                  {hoveredGrid.rows} row × {hoveredGrid.cols} col
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2E2E2E]">
+                <span className="text-sm text-[#999999]">Click a cell to select grid size</span>
               </div>
             )}
           </div>
+        </div>
 
+        {/* Dropzone / Image Preview */}
+        <div className="w-full max-w-md mx-auto">
           <div
+            ref={dropZoneRef}
             onClick={() => fileInputRef.current?.click()}
-            className="relative border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-16 text-center cursor-pointer transition-all hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 group"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+            className={`
+              relative bg-white dark:bg-[#1A1A1A] border-2 border-dashed rounded-2xl p-8 cursor-pointer transition-all duration-200
+              ${imagePreview
+                ? 'border-[#E5E5E5] dark:border-[#2E2E2E] hover:border-[#999999] dark:hover:border-[#666666]'
+                : 'border-[#E5E5E5] dark:border-[#2E2E2E] hover:border-[#007AFF] dark:hover:border-[#60A5FA]'
+              }
+            `}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity" />
-
-            <div className="relative">
-              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Upload className="w-8 h-8 text-gray-400 group-hover:text-blue-600 transition-colors" />
+            {imagePreview ? (
+              <div className="relative">
+                <button
+                  onClick={(e) => { e.stopPropagation(); resetImage(); }}
+                  className="absolute -top-2 -right-2 z-10 w-7 h-7 bg-[#111111] dark:bg-[#EDEDED] rounded-full flex items-center justify-center hover:scale-110 transition-transform"
+                >
+                  <X className="w-4 h-4 text-white dark:text-[#111111]" />
+                </button>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full aspect-video object-contain rounded-lg bg-[#FAFAFA] dark:bg-[#0A0A0A]"
+                />
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-[#666666]" />
+                    <span className="text-sm text-[#666666] truncate max-w-[200px]">
+                      {imageFile?.name}
+                    </span>
+                  </div>
+                  <span className="text-xs px-2 py-1 rounded bg-[#FAFAFA] dark:bg-[#0A0A0A] text-[#666666] border border-[#E5E5E5] dark:border-[#2E2E2E]">
+                    {imageFile?.type === 'image/jpeg' ? 'JPEG' :
+                     imageFile?.type === 'image/png' ? 'PNG' :
+                     imageFile?.type === 'image/webp' ? 'WebP' : 'Image'}
+                  </span>
+                </div>
               </div>
-              <p className="text-gray-900 dark:text-white font-semibold mb-2">
-                点击上传图片
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500">
-                支持 JPG、PNG、GIF 等格式
-              </p>
-            </div>
+            ) : (
+              <div className="text-center py-4">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-[#FAFAFA] dark:bg-[#0A0A0A] flex items-center justify-center border border-[#E5E5E5] dark:border-[#2E2E2E]">
+                  <Upload className="w-6 h-6 text-[#666666]" />
+                </div>
+                <p className="text-[#111111] dark:text-[#EDEDED] font-medium mb-1">
+                  Click or drag to upload
+                </p>
+                <p className="text-sm text-[#999999]">
+                  JPG, PNG, WebP, GIF
+                </p>
+              </div>
+            )}
 
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={handleImageUpload}
+              onChange={handleInputChange}
               className="hidden"
             />
           </div>
         </div>
 
-        {/* Preview and Download */}
-        {previews.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-8">
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-50 dark:bg-purple-950 rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    {t('imageSplitter.preview')}
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-500 dark:text-gray-500">
-                      共 {previews.length} 张切片
-                    </p>
-                    <span className="text-sm text-gray-400">•</span>
-                    <p className="text-sm text-gray-500 dark:text-gray-500">
-                      格式: {imageFormat === 'image/jpeg' ? 'JPEG' :
-                             imageFormat === 'image/png' ? 'PNG' :
-                             imageFormat === 'image/webp' ? 'WebP' :
-                             imageFormat === 'image/gif' ? 'GIF' : '未知'}
-                    </p>
-                  </div>
-                </div>
+        {/* Processing State */}
+        {isProcessing && (
+          <div className="mt-6 flex items-center gap-2 text-[#666666]">
+            <div className="w-5 h-5 border-2 border-[#E5E5E5] border-t-[#007AFF] rounded-full animate-spin" />
+            <span className="text-sm">Processing...</span>
+          </div>
+        )}
+
+        {/* Results */}
+        {splitResults.length > 0 && !isProcessing && (
+          <div className="w-full max-w-md mx-auto mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-[#111111] dark:text-[#EDEDED]">
+                  {splitResults.length} pieces
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded bg-[#FAFAFA] dark:bg-[#0A0A0A] text-[#666666] border border-[#E5E5E5] dark:border-[#2E2E2E]">
+                  {getExtension(imageFile?.type || 'image/png').toUpperCase()}
+                </span>
               </div>
 
               <button
                 onClick={handleDownload}
-                disabled={isProcessing}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 disabled:shadow-none font-semibold"
+                className="flex items-center gap-2 px-4 py-2 bg-[#111111] dark:bg-[#EDEDED] text-white dark:text-[#111111] rounded-lg text-sm font-medium hover:scale-105 transition-transform"
               >
-                <Download className="w-5 h-5" />
-                {isProcessing ? t('imageSplitter.processing') : '一键打包下载 ZIP'}
+                <Download className="w-4 h-4" />
+                Download ZIP
               </button>
             </div>
 
-            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4">
-              {previews.map((preview, index) => (
+            <div className="grid grid-cols-4 gap-2">
+              {splitResults.map((result, index) => (
                 <div key={index} className="relative group">
-                  <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 group-hover:border-blue-400 dark:group-hover:border-blue-600 transition-colors">
-                    <img
-                      src={preview}
-                      alt={`Piece ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 opacity-0 group-hover:opacity-20 transition-opacity rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      #{String(index + 1).padStart(3, '0')}
+                  <img
+                    src={result}
+                    alt={`Piece ${index + 1}`}
+                    className="w-full aspect-square object-cover rounded-lg border border-[#E5E5E5] dark:border-[#2E2E2E]"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                    <span className="text-xs text-white font-medium">
+                      {String(index + 1).padStart(2, '0')}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* Download Info */}
-            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                📦 下载文件名格式: 001.{imageFormat === 'image/jpeg' ? 'jpg' :
-                                      imageFormat === 'image/webp' ? 'webp' :
-                                      imageFormat === 'image/gif' ? 'gif' : 'png'}, 002.{imageFormat === 'image/jpeg' ? 'jpg' :
-                                      imageFormat === 'image/webp' ? 'webp' :
-                                      imageFormat === 'image/gif' ? 'gif' : 'png'}, ...
-              </p>
-            </div>
           </div>
         )}
+
+        {/* Footer */}
+        <p className="mt-16 text-xs text-[#999999]">
+          Runs locally in your browser
+        </p>
       </div>
     </div>
   );

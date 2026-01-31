@@ -59,3 +59,8 @@ body {
 button, a, input, textarea {
   transition: all 0.2s ease-in-out;
 }
+
+/* Radial gradient utility */
+.bg-radial-gradient {
+  background: radial-gradient(circle at center, var(--tw-gradient-from), var(--tw-gradient-via), transparent);
+}
