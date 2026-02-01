@@ -104,25 +104,8 @@ export const Clipboard = () => {
       ws.onclose = (event) => {
         clearTimeout(timeout);
         console.log('[Clipboard] WebSocket disconnected:', event.code, event.reason);
-        setConnectionStatus('disconnected');
-
-        if (isKeySet && keyHash) {
-          const newReconnectCount = reconnectCount + 1;
-          setReconnectCount(newReconnectCount);
-
-          if (newReconnectCount <= 5) {
-            const delay = Math.min(1000 * Math.pow(1.5, newReconnectCount - 1), 10000);
-            console.log(`[Clipboard] Reconnecting in ${delay}ms (attempt ${newReconnectCount})`);
-            addMessage(`${t('clipboard.disconnected')} - ${t('clipboard.connecting')}...`, 'error');
-
-            reconnectTimeoutRef.current = setTimeout(() => {
-              connectWebSocket(keyHash, true);
-            }, delay);
-          } else {
-            addMessage(t('clipboard.connectionError'), 'error');
-            setConnectionStatus('error');
-          }
-        }
+        setConnectionStatus('error');
+        addMessage(t('clipboard.connectionError'), 'error');
       };
 
       ws.onerror = (error) => {
@@ -248,7 +231,7 @@ export const Clipboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+    <div className="min-h-screen bg-white">
       <SEO
         title={t('clipboard.title')}
         description={t('clipboard.description')}
@@ -262,31 +245,31 @@ export const Clipboard = () => {
       <div className="relative flex flex-col items-center justify-center min-h-screen px-6 py-16">
         {/* Header */}
         <div className="w-full max-w-2xl mx-auto text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2E2E2E] mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E5E5E5] mb-6">
             <Lock className="w-3.5 h-3.5 text-[#34C759]" />
-            <span className="text-xs font-medium text-[#666666] dark:text-[#A1A1A1]">
+            <span className="text-xs font-medium text-[#666666]">
               End-to-End Encrypted
             </span>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-semibold text-[#111111] dark:text-[#EDEDED] mb-3">
+          <h1 className="text-3xl md:text-4xl font-semibold text-[#111111] mb-3">
             {t('clipboard.title').split(' - ')[0]}
           </h1>
 
-          <p className="text-[#666666] dark:text-[#888888]">
+          <p className="text-[#666666]">
             {t('clipboard.description')}
           </p>
         </div>
 
         {/* Step 1: Set Key */}
         <div className="w-full max-w-md mx-auto mb-6">
-          <div className="bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2E2E2E] rounded-2xl p-6">
+          <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] dark:bg-[#1E3A5F] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] flex items-center justify-center">
                   <Key className="w-4 h-4 text-[#007AFF]" />
                 </div>
-                <span className="text-sm font-medium text-[#111111] dark:text-[#EDEDED]">
+                <span className="text-sm font-medium text-[#111111]">
                   {t('clipboard.step1')}
                 </span>
               </div>
@@ -311,21 +294,21 @@ export const Clipboard = () => {
                 }}
                 disabled={isKeySet}
                 placeholder={t('clipboard.keyPlaceholder')}
-                className="flex-1 px-3 py-2.5 text-sm border border-[#E5E5E5] dark:border-[#2E2E2E] rounded-lg bg-[#FAFAFA] dark:bg-[#0A0A0A] text-[#111111] dark:text-[#EDEDED] focus:outline-none focus:border-[#007AFF] disabled:text-[#999999] transition-colors"
+                className="flex-1 px-3 py-2.5 text-sm border border-[#E5E5E5] rounded-lg bg-[#FAFAFA] text-[#111111] focus:outline-none focus:border-[#007AFF] disabled:text-[#999999] transition-colors"
                 maxLength={50}
               />
               {!isKeySet ? (
                 <button
                   onClick={handleSetKey}
                   disabled={!key.trim()}
-                  className="px-4 py-2.5 text-sm font-medium bg-[#111111] dark:bg-[#EDEDED] text-white dark:text-[#111111] rounded-lg transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                  className="px-4 py-2.5 text-sm font-medium bg-[#111111] text-white rounded-lg transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                 >
                   {t('clipboard.setKey')}
                 </button>
               ) : (
                 <button
                   onClick={handleClearKey}
-                  className="px-4 py-2.5 text-sm font-medium bg-[#FFF2F2] dark:bg-[#3D1A1A] text-[#E11D48] rounded-lg transition-all hover:scale-105"
+                  className="px-4 py-2.5 text-sm font-medium bg-[#FFF2F2] text-[#E11D48] rounded-lg transition-all hover:scale-105"
                 >
                   {t('clipboard.clearKey')}
                 </button>
@@ -338,13 +321,13 @@ export const Clipboard = () => {
           <>
             {/* Step 2: Connection Status */}
             <div className="w-full max-w-md mx-auto mb-6">
-              <div className="bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2E2E2E] rounded-2xl p-6">
+              <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] dark:bg-[#1E3A5F] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] flex items-center justify-center">
                       <Wifi className="w-4 h-4 text-[#007AFF]" />
                     </div>
-                    <span className="text-sm font-medium text-[#111111] dark:text-[#EDEDED]">
+                    <span className="text-sm font-medium text-[#111111]">
                       {t('clipboard.step2')}
                     </span>
                   </div>
@@ -369,9 +352,9 @@ export const Clipboard = () => {
                 </div>
 
                 {connectionStatus === 'error' && (
-                  <div className="mt-3 flex items-start gap-2 px-3 py-2 bg-[#FFF2F2] dark:bg-[#3D1A1A] rounded-lg border border-[#FECACA] dark:border-[#7F1D1D]">
+                  <div className="mt-3 flex items-start gap-2 px-3 py-2 bg-[#FFF2F2] rounded-lg border border-[#FECACA]">
                     <AlertCircle className="w-4 h-4 text-[#E11D48] flex-shrink-0 mt-0.5" />
-                    <div className="text-xs text-[#991B1B] dark:text-[#FECACA]">
+                    <div className="text-xs text-[#991B1B]">
                       <p className="font-medium">Connection failed</p>
                       <p className="mt-1 opacity-75">Make sure the backend server is running at port 8080</p>
                     </div>
@@ -382,12 +365,12 @@ export const Clipboard = () => {
 
             {/* Step 3: Send Message */}
             <div className="w-full max-w-md mx-auto mb-6">
-              <div className="bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2E2E2E] rounded-2xl p-6">
+              <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] dark:bg-[#1E3A5F] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] flex items-center justify-center">
                     <MessageSquare className="w-4 h-4 text-[#007AFF]" />
                   </div>
-                  <span className="text-sm font-medium text-[#111111] dark:text-[#EDEDED]">
+                  <span className="text-sm font-medium text-[#111111]">
                     {t('clipboard.step3')}
                   </span>
                 </div>
@@ -403,7 +386,7 @@ export const Clipboard = () => {
                       }
                     }}
                     placeholder={t('clipboard.messagePlaceholder')}
-                    className="w-full px-3 py-2.5 text-sm border border-[#E5E5E5] dark:border-[#2E2E2E] rounded-lg bg-[#FAFAFA] dark:bg-[#0A0A0A] text-[#111111] dark:text-[#EDEDED] focus:outline-none focus:border-[#007AFF] resize-none transition-colors"
+                    className="w-full px-3 py-2.5 text-sm border border-[#E5E5E5] rounded-lg bg-[#FAFAFA] text-[#111111] focus:outline-none focus:border-[#007AFF] resize-none transition-colors"
                     rows={3}
                   />
 
@@ -414,7 +397,7 @@ export const Clipboard = () => {
                     <button
                       onClick={handleSendMessage}
                       disabled={!message.trim() || connectionStatus !== 'connected'}
-                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#111111] dark:bg-[#EDEDED] text-white dark:text-[#111111] rounded-lg transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#111111] text-white rounded-lg transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                     >
                       <Send className="w-4 h-4" />
                       {t('clipboard.sendMessage')}
@@ -426,12 +409,12 @@ export const Clipboard = () => {
 
             {/* Step 4: Messages */}
             <div className="w-full max-w-md mx-auto">
-              <div className="bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2E2E2E] rounded-2xl p-6">
+              <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] dark:bg-[#1E3A5F] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] flex items-center justify-center">
                     <MessageSquare className="w-4 h-4 text-[#007AFF]" />
                   </div>
-                  <span className="text-sm font-medium text-[#111111] dark:text-[#EDEDED]">
+                  <span className="text-sm font-medium text-[#111111]">
                     {t('clipboard.step4')}
                   </span>
                 </div>
@@ -439,7 +422,7 @@ export const Clipboard = () => {
                 <div className="max-h-80 overflow-y-auto space-y-2">
                   {messages.length === 0 ? (
                     <div className="text-center py-8">
-                      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#FAFAFA] dark:bg-[#0A0A0A] flex items-center justify-center border border-[#E5E5E5] dark:border-[#2E2E2E]">
+                      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#FAFAFA] flex items-center justify-center border border-[#E5E5E5]">
                         <MessageSquare className="w-5 h-5 text-[#999999]" />
                       </div>
                       <p className="text-sm text-[#999999]">
@@ -451,12 +434,12 @@ export const Clipboard = () => {
                       <div
                         key={index}
                         className={`relative p-3 rounded-lg border transition-all ${msg.type === 'sent'
-                          ? 'bg-[#F0F9FF] dark:bg-[#1E3A5F] border-[#007AFF]/30'
+                          ? 'bg-[#F0F9FF] border-[#007AFF]/30'
                           : msg.type === 'received'
-                            ? 'bg-[#F0FDF4] dark:bg-[#1A3D1A] border-[#34C759]/30'
+                            ? 'bg-[#F0FDF4] border-[#34C759]/30'
                             : msg.type === 'success'
-                              ? 'bg-[#F0FDF4] dark:bg-[#1A3D1A] border-[#34C759]/30'
-                              : 'bg-[#FFF2F2] dark:bg-[#3D1A1A] border-[#E11D48]/30'
+                              ? 'bg-[#F0FDF4] border-[#34C759]/30'
+                              : 'bg-[#FFF2F2] border-[#E11D48]/30'
                           }`}
                       >
                         <div className="flex justify-between items-start gap-2">
@@ -476,14 +459,14 @@ export const Clipboard = () => {
                                 {msg.timestamp.toLocaleTimeString()}
                               </span>
                             </div>
-                            <div className="text-sm text-[#111111] dark:text-[#EDEDED] whitespace-pre-wrap break-words">
+                            <div className="text-sm text-[#111111] whitespace-pre-wrap break-words">
                               {msg.content}
                             </div>
                           </div>
                           {(msg.type === 'sent' || msg.type === 'received') && (
                             <button
                               onClick={() => handleCopyMessage(msg.content, index)}
-                              className="flex-shrink-0 p-1.5 hover:bg-[#E5E5E5] dark:hover:bg-[#2E2E2E] rounded transition-colors"
+                              className="flex-shrink-0 p-1.5 hover:bg-[#E5E5E5] rounded transition-colors"
                             >
                               {copiedIndex === index ? (
                                 <Check className="w-4 h-4 text-[#34C759]" />
