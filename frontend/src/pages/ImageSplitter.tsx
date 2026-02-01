@@ -206,7 +206,10 @@ export const ImageSplitter = () => {
             <div className="flex flex-col items-center">
               <div
                 className="grid gap-1 p-4 bg-[#FAFAFA] rounded-xl border border-[#E5E5E5]"
-                style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
+                style={{
+                  gridTemplateColumns: `repeat(${gridSize}, 40px)`,
+                  gridTemplateRows: `repeat(${gridSize}, 40px)`
+                }}
               >
                 {Array.from({ length: gridSize * gridSize }).map((_, idx) => {
                   const row = Math.floor(idx / gridSize) + 1;
