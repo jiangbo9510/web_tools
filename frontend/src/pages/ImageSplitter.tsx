@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
 import JSZip from 'jszip';
@@ -22,12 +22,22 @@ export const ImageSplitter = () => {
   const [selectedGrid, setSelectedGrid] = useState<SelectedGrid | null>(null);
   const [hoveredGrid, setHoveredGrid] = useState<SelectedGrid | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [splitResults, setSplitResults] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [imageName, setImageName] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const gridSize = 5;
+
+  // Cleanup object URL on unmount or when image changes
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
 
   const getExtension = (mimeType: string): string => {
     const map: Record<string, string> = {
@@ -95,6 +105,10 @@ export const ImageSplitter = () => {
     const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
     setImageName(nameWithoutExt);
 
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreviewUrl(previewUrl);
+
     if (selectedGrid) {
       processImage(file, selectedGrid.rows, selectedGrid.cols);
     }
@@ -139,6 +153,10 @@ export const ImageSplitter = () => {
   const resetImage = () => {
     setImageFile(null);
     setImageName('');
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+      setImagePreviewUrl(null);
+    }
     setSplitResults([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -294,6 +312,40 @@ export const ImageSplitter = () => {
           </div>
         </div>
 
+        {/* Preview with Grid Overlay */}
+        {imagePreviewUrl && selectedGrid && (
+           <div className="mb-8 p-4 bg-white border border-[#E5E5E5] rounded-2xl">
+             <h3 className="text-sm font-medium text-[#111111] mb-4">Preview</h3>
+             <div className="relative inline-block overflow-hidden rounded-lg mx-auto block w-fit">
+               <img
+                 src={imagePreviewUrl}
+                 alt="Preview"
+                 className="max-w-[100%] max-h-[500px] object-contain block"
+               />
+               <div
+                 className="absolute inset-0 pointer-events-none"
+                 style={{
+                   display: 'grid',
+                   gridTemplateColumns: `repeat(${selectedGrid.cols}, 1fr)`,
+                   gridTemplateRows: `repeat(${selectedGrid.rows}, 1fr)`,
+                 }}
+               >
+                 {Array.from({ length: selectedGrid.rows * selectedGrid.cols }).map((_, idx) => (
+                   <div
+                     key={idx}
+                     className="border-r border-b border-white/50 last:border-0"
+                     style={{
+                        // Handle right/bottom borders for the last items in row/col
+                        borderRightWidth: (idx + 1) % selectedGrid.cols === 0 ? '0' : '1px',
+                        borderBottomWidth: idx >= (selectedGrid.rows - 1) * selectedGrid.cols ? '0' : '1px'
+                     }}
+                   />
+                 ))}
+               </div>
+             </div>
+           </div>
+        )}
+
         {/* Processing State */}
         {isProcessing && (
           <div className="mb-8 flex items-center justify-center gap-2 text-[#666666]">
@@ -316,7 +368,7 @@ export const ImageSplitter = () => {
 
             {/* Grid displayed in user's selected format (cols x rows) */}
             <div
-              className="grid gap-2 mb-8"
+              className="grid gap-2 mb-8 bg-white p-4 rounded-xl border border-[#E5E5E5]"
               style={{
                 gridTemplateColumns: `repeat(${selectedGrid.cols}, minmax(0, 1fr))`
               }}
@@ -328,8 +380,8 @@ export const ImageSplitter = () => {
                     alt={`Piece ${index + 1}`}
                     className="w-full aspect-square object-cover rounded-lg border border-[#E5E5E5]"
                   />
-                  <p className="text-xs text-[#666666] text-center">
-                    {index + 1}
+                  <p className="text-xs text-[#666666] text-center font-mono">
+                    #{index + 1}
                   </p>
                 </div>
               ))}
