@@ -30,7 +30,7 @@ export const Clipboard = () => {
   const getWebSocketUrl = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = import.meta.env.DEV ? 'localhost:8080' : window.location.host;
-    return `${protocol}//${host}/ws`;
+    return `${protocol}//${host}/api/ws`;
   }, []);
 
   const addMessage = useCallback((content: string, type: 'sent' | 'received' | 'error' | 'success') => {
