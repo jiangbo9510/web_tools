@@ -48,11 +48,19 @@ type Client struct {
 
 // Hub 管理所有客户端连接
 type Hub struct {
-	clients    map[*Client]bool
-	register   chan *Client
-	unregister chan *Client
-	broadcast  chan []byte
-	mutex      sync.RWMutex
+	clients        map[*Client]bool
+	register       chan *Client
+	unregister     chan *Client
+	broadcast      chan []byte
+	mutex          sync.RWMutex
+	messageHistory map[string][]HistoryMessage // keyHash -> messages
+	historyMutex   sync.RWMutex
+}
+
+// HistoryMessage 历史消息
+type HistoryMessage struct {
+	EncryptedMessage string    `json:"encryptedMessage"`
+	Timestamp        time.Time `json:"timestamp"`
 }
 
 // Message WebSocket消息结构
@@ -77,10 +85,11 @@ func init() {
 
 	// 初始化Hub
 	hub = &Hub{
-		clients:    make(map[*Client]bool),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		broadcast:  make(chan []byte),
+		clients:        make(map[*Client]bool),
+		register:       make(chan *Client),
+		unregister:     make(chan *Client),
+		broadcast:      make(chan []byte),
+		messageHistory: make(map[string][]HistoryMessage),
 	}
 }
 
@@ -324,6 +333,27 @@ func (c *Client) handleMessage(msg Message) {
 		}
 		c.sendMessage(response)
 
+		// 发送历史消息
+		hub.historyMutex.RLock()
+		if history, exists := hub.messageHistory[c.KeyHash]; exists {
+			// 使用goroutine异步发送历史消息，避免阻塞
+			go func(client *Client, historyMessages []HistoryMessage) {
+				for i, histMsg := range historyMessages {
+					// 添加小延迟确保消息单独发送
+					if i > 0 {
+						time.Sleep(10 * time.Millisecond)
+					}
+					historyResponse := Message{
+						Type:             "message",
+						EncryptedMessage: histMsg.EncryptedMessage,
+					}
+					client.sendMessage(historyResponse)
+				}
+				log.Printf("发送历史消息 %d 条，密钥哈希: %s", len(historyMessages), client.KeyHash)
+			}(c, history)
+		}
+		hub.historyMutex.RUnlock()
+
 	case "message":
 		// 转发消息给相同密钥的其他客户端
 		if c.KeyHash == "" {
@@ -342,6 +372,21 @@ func (c *Client) handleMessage(msg Message) {
 			EncryptedMessage: msg.EncryptedMessage,
 		}
 		c.broadcastToSameKey(response)
+
+		// 存储到历史记录
+		hub.historyMutex.Lock()
+		if _, exists := hub.messageHistory[c.KeyHash]; !exists {
+			hub.messageHistory[c.KeyHash] = make([]HistoryMessage, 0)
+		}
+		hub.messageHistory[c.KeyHash] = append(hub.messageHistory[c.KeyHash], HistoryMessage{
+			EncryptedMessage: msg.EncryptedMessage,
+			Timestamp:        time.Now(),
+		})
+		// 限制历史记录数量（保留最近50条）
+		if len(hub.messageHistory[c.KeyHash]) > 50 {
+			hub.messageHistory[c.KeyHash] = hub.messageHistory[c.KeyHash][len(hub.messageHistory[c.KeyHash])-50:]
+		}
+		hub.historyMutex.Unlock()
 
 		log.Printf("转发消息，密钥哈希: %s", c.KeyHash)
 

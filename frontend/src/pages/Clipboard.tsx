@@ -30,7 +30,7 @@ export const Clipboard = () => {
   const getWebSocketUrl = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = import.meta.env.DEV ? 'localhost:8080' : window.location.host;
-    return `${protocol}//${host}/api/ws`;
+    return `${protocol}//${host}/ws`;
   }, []);
 
   const addMessage = useCallback((content: string, type: 'sent' | 'received' | 'error' | 'success') => {
@@ -281,13 +281,21 @@ export const Clipboard = () => {
         {/* Step 1: Set Key */}
         <div className="w-full max-w-md mx-auto mb-6">
           <div className="bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#2E2E2E] rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] dark:bg-[#1E3A5F] flex items-center justify-center">
-                <Key className="w-4 h-4 text-[#007AFF]" />
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] dark:bg-[#1E3A5F] flex items-center justify-center">
+                  <Key className="w-4 h-4 text-[#007AFF]" />
+                </div>
+                <span className="text-sm font-medium text-[#111111] dark:text-[#EDEDED]">
+                  {t('clipboard.step1')}
+                </span>
               </div>
-              <span className="text-sm font-medium text-[#111111] dark:text-[#EDEDED]">
-                {t('clipboard.step1')}
-              </span>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${isKeySet ? 'bg-[#34C759]' : 'bg-[#E5E5E5]'}`} />
+                <span className={`text-xs ${isKeySet ? 'text-[#34C759]' : 'text-[#999999]'}`}>
+                  {isKeySet ? t('clipboard.keySet') : t('clipboard.noKey')}
+                </span>
+              </div>
             </div>
 
             <div className="flex gap-2">
@@ -323,13 +331,6 @@ export const Clipboard = () => {
                 </button>
               )}
             </div>
-
-            <div className="mt-4 flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isKeySet ? 'bg-[#34C759]' : 'bg-[#E5E5E5]'}`} />
-              <span className={`text-xs ${isKeySet ? 'text-[#34C759]' : 'text-[#999999]'}`}>
-                {isKeySet ? t('clipboard.keySet') : t('clipboard.noKey')}
-              </span>
-            </div>
           </div>
         </div>
 
@@ -348,26 +349,23 @@ export const Clipboard = () => {
                     </span>
                   </div>
 
-                  {connectionStatus !== 'connected' && (
-                    <button
-                      onClick={handleReconnect}
-                      className="flex items-center gap-1 px-2 py-1 text-xs text-[#666666] hover:text-[#007AFF] transition-colors"
-                    >
-                      <RefreshCw className="w-3 h-3" />
-                      Retry
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3 px-3 py-2.5 bg-[#FAFAFA] dark:bg-[#0A0A0A] rounded-lg border border-[#E5E5E5] dark:border-[#2E2E2E]">
-                  <div className={`w-2 h-2 rounded-full ${getConnectionStatusColor()}`} />
-                  <span className={`text-sm font-medium ${
-                    connectionStatus === 'connected' ? 'text-[#34C759]' :
-                    connectionStatus === 'connecting' ? 'text-[#F59E0B]' :
-                    connectionStatus === 'error' ? 'text-[#E11D48]' : 'text-[#666666]'
-                  }`}>
-                    {getConnectionStatusText()}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${getConnectionStatusColor()}`} />
+                    <span className={`text-xs font-medium ${connectionStatus === 'connected' ? 'text-[#34C759]' :
+                      connectionStatus === 'connecting' ? 'text-[#F59E0B]' :
+                        connectionStatus === 'error' ? 'text-[#E11D48]' : 'text-[#666666]'
+                      }`}>
+                      {getConnectionStatusText()}
+                    </span>
+                    {connectionStatus !== 'connected' && (
+                      <button
+                        onClick={handleReconnect}
+                        className="flex items-center gap-1 px-2 py-1 text-xs text-[#666666] hover:text-[#007AFF] transition-colors"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {connectionStatus === 'error' && (
@@ -452,28 +450,26 @@ export const Clipboard = () => {
                     messages.map((msg, index) => (
                       <div
                         key={index}
-                        className={`relative p-3 rounded-lg border transition-all ${
-                          msg.type === 'sent'
-                            ? 'bg-[#F0F9FF] dark:bg-[#1E3A5F] border-[#007AFF]/30'
-                            : msg.type === 'received'
+                        className={`relative p-3 rounded-lg border transition-all ${msg.type === 'sent'
+                          ? 'bg-[#F0F9FF] dark:bg-[#1E3A5F] border-[#007AFF]/30'
+                          : msg.type === 'received'
                             ? 'bg-[#F0FDF4] dark:bg-[#1A3D1A] border-[#34C759]/30'
                             : msg.type === 'success'
-                            ? 'bg-[#F0FDF4] dark:bg-[#1A3D1A] border-[#34C759]/30'
-                            : 'bg-[#FFF2F2] dark:bg-[#3D1A1A] border-[#E11D48]/30'
-                        }`}
+                              ? 'bg-[#F0FDF4] dark:bg-[#1A3D1A] border-[#34C759]/30'
+                              : 'bg-[#FFF2F2] dark:bg-[#3D1A1A] border-[#E11D48]/30'
+                          }`}
                       >
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
-                                msg.type === 'sent'
-                                  ? 'bg-[#007AFF] text-white'
-                                  : msg.type === 'received'
+                              <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${msg.type === 'sent'
+                                ? 'bg-[#007AFF] text-white'
+                                : msg.type === 'received'
                                   ? 'bg-[#34C759] text-white'
                                   : msg.type === 'success'
-                                  ? 'bg-[#34C759] text-white'
-                                  : 'bg-[#E11D48] text-white'
-                              }`}>
+                                    ? 'bg-[#34C759] text-white'
+                                    : 'bg-[#E11D48] text-white'
+                                }`}>
                                 {msg.type === 'sent' ? 'Sent' : msg.type === 'received' ? 'Received' : msg.type === 'success' ? 'Success' : 'Error'}
                               </span>
                               <span className="text-xs text-[#999999]">
@@ -505,11 +501,6 @@ export const Clipboard = () => {
             </div>
           </>
         )}
-
-        {/* Footer */}
-        <p className="mt-16 text-xs text-[#999999]">
-          Runs locally in your browser
-        </p>
       </div>
     </div>
   );

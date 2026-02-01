@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 import {
   Upload,
   Grid3X3,
-  Download,
+  Archive,
   X,
   Image as ImageIcon,
   Check
@@ -357,33 +357,35 @@ export const ImageSplitter = () => {
 
         {/* Preview with Grid Overlay */}
         {imagePreviewUrl && confirmedGrid && (
-          <div className="mb-8 p-4 bg-white border border-[#E5E5E5] rounded-2xl">
-            <h3 className="text-sm font-medium text-[#111111] mb-4">Preview</h3>
-            <div className="relative inline-block overflow-hidden rounded-lg mx-auto block w-fit">
-              <img
-                src={imagePreviewUrl}
-                alt="Preview"
-                className="max-w-[100%] max-h-[500px] object-contain block"
-              />
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: `repeat(${confirmedGrid.cols}, 1fr)`,
-                  gridTemplateRows: `repeat(${confirmedGrid.rows}, 1fr)`,
-                }}
-              >
-                {Array.from({ length: confirmedGrid.rows * confirmedGrid.cols }).map((_, idx) => (
-                  <div
-                    key={idx}
-                    className="border-r border-b border-white/50 last:border-0"
-                    style={{
-                      // Handle right/bottom borders for the last items in row/col
-                      borderRightWidth: (idx + 1) % confirmedGrid.cols === 0 ? '0' : '1px',
-                      borderBottomWidth: idx >= (confirmedGrid.rows - 1) * confirmedGrid.cols ? '0' : '1px'
-                    }}
-                  />
-                ))}
+          <div className="mb-8 p-6 bg-white border border-[#E5E5E5] rounded-2xl shadow-sm">
+            <h3 className="text-sm font-medium text-[#111111] mb-4 text-center">Preview with Grid Overlay</h3>
+            <div className="flex justify-center">
+              <div className="relative inline-block overflow-hidden rounded-lg shadow-md">
+                <img
+                  src={imagePreviewUrl}
+                  alt="Preview"
+                  className="max-w-[100%] max-h-[500px] object-contain block"
+                />
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${confirmedGrid.cols}, 1fr)`,
+                    gridTemplateRows: `repeat(${confirmedGrid.rows}, 1fr)`,
+                  }}
+                >
+                  {Array.from({ length: confirmedGrid.rows * confirmedGrid.cols }).map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="border-r border-b border-white/50 last:border-0"
+                      style={{
+                        // Handle right/bottom borders for the last items in row/col
+                        borderRightWidth: (idx + 1) % confirmedGrid.cols === 0 ? '0' : '1px',
+                        borderBottomWidth: idx >= (confirmedGrid.rows - 1) * confirmedGrid.cols ? '0' : '1px'
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -434,10 +436,10 @@ export const ImageSplitter = () => {
             <div className="flex justify-center">
               <button
                 onClick={handleDownload}
-                className="flex items-center gap-2 px-6 py-3 bg-white border border-[#E5E5E5] rounded-xl text-sm font-medium text-[#111111] hover:border-[#111111] hover:scale-105 transition-all"
+                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#007AFF] to-[#5856D6] text-white rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
               >
-                <Download className="w-4 h-4" />
-                Download ZIP
+                <Archive className="w-6 h-6" />
+                <span>Download ZIP</span>
               </button>
             </div>
           </div>
