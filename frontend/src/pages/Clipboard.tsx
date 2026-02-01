@@ -301,9 +301,10 @@ export const Clipboard = () => {
                 <button
                   onClick={handleSetKey}
                   disabled={!key.trim()}
-                  className="px-4 py-2.5 text-sm font-medium bg-[#111111] text-white rounded-lg transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                  className="p-2.5 border border-[#E5E5E5] rounded-lg transition-all hover:border-[#007AFF] hover:bg-[#F0F9FF] disabled:opacity-50 disabled:hover:border-[#E5E5E5] disabled:hover:bg-transparent"
+                  title={t('clipboard.setKey')}
                 >
-                  {t('clipboard.setKey')}
+                  <Check className="w-5 h-5 text-[#111111]" />
                 </button>
               ) : (
                 <button
@@ -397,10 +398,10 @@ export const Clipboard = () => {
                     <button
                       onClick={handleSendMessage}
                       disabled={!message.trim() || connectionStatus !== 'connected'}
-                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#111111] text-white rounded-lg transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                      className="p-2.5 border border-[#E5E5E5] rounded-lg transition-all hover:border-[#007AFF] hover:bg-[#F0F9FF] disabled:opacity-50 disabled:hover:border-[#E5E5E5] disabled:hover:bg-transparent"
+                      title={t('clipboard.sendMessage')}
                     >
-                      <Send className="w-4 h-4" />
-                      {t('clipboard.sendMessage')}
+                      <Send className="w-5 h-5 text-[#111111]" />
                     </button>
                   </div>
                 </div>
