@@ -19,7 +19,8 @@ interface SelectedGrid {
 
 export const ImageSplitter = () => {
   const { t } = useTranslation();
-  const [selectedGrid, setSelectedGrid] = useState<SelectedGrid | null>(null);
+  const [pendingGrid, setPendingGrid] = useState<SelectedGrid | null>(null);
+  const [confirmedGrid, setConfirmedGrid] = useState<SelectedGrid | null>(null);
   const [hoveredGrid, setHoveredGrid] = useState<SelectedGrid | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -109,10 +110,10 @@ export const ImageSplitter = () => {
     const previewUrl = URL.createObjectURL(file);
     setImagePreviewUrl(previewUrl);
 
-    if (selectedGrid) {
-      processImage(file, selectedGrid.rows, selectedGrid.cols);
+    if (confirmedGrid) {
+      processImage(file, confirmedGrid.rows, confirmedGrid.cols);
     }
-  }, [selectedGrid, processImage]);
+  }, [confirmedGrid, processImage]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -126,9 +127,14 @@ export const ImageSplitter = () => {
   };
 
   const handleGridSelect = (rows: number, cols: number) => {
-    setSelectedGrid({ rows, cols });
+    setPendingGrid({ rows, cols });
+  };
+
+  const handleConfirmGrid = () => {
+    if (!pendingGrid) return;
+    setConfirmedGrid(pendingGrid);
     if (imageFile) {
-      processImage(imageFile, rows, cols);
+      processImage(imageFile, pendingGrid.rows, pendingGrid.cols);
     }
   };
 
@@ -205,8 +211,15 @@ export const ImageSplitter = () => {
                 {Array.from({ length: gridSize * gridSize }).map((_, idx) => {
                   const row = Math.floor(idx / gridSize) + 1;
                   const col = (idx % gridSize) + 1;
-                  const isSelectedCell = selectedGrid && row <= selectedGrid.rows && col <= selectedGrid.cols;
-                  const isCornerCell = selectedGrid?.rows === row && selectedGrid?.cols === col;
+
+                  // Check confirmed selection (dark blue)
+                  const isConfirmedCell = confirmedGrid && row <= confirmedGrid.rows && col <= confirmedGrid.cols;
+                  const isConfirmedCorner = confirmedGrid?.rows === row && confirmedGrid?.cols === col;
+
+                  // Check pending selection (light blue)
+                  const isPendingCell = pendingGrid && row <= pendingGrid.rows && col <= pendingGrid.cols;
+                  const isPendingCorner = pendingGrid?.rows === row && pendingGrid?.cols === col;
+
                   const isHovered = isHighlighted(row, col);
 
                   return (
@@ -217,29 +230,49 @@ export const ImageSplitter = () => {
                       onClick={() => handleGridSelect(row, col)}
                       className={`
                         w-10 h-10 rounded-lg transition-all duration-150 text-xs font-medium
-                        ${isCornerCell
+                        ${isConfirmedCorner
                           ? 'bg-[#007AFF] text-white ring-2 ring-[#007AFF] ring-offset-1'
-                          : isSelectedCell
+                          : isConfirmedCell
                             ? 'bg-[#007AFF]/80 text-white'
-                            : isHovered
-                              ? 'bg-[#E5F0FF] text-[#007AFF]'
-                              : 'bg-white border border-[#E5E5E5] text-[#666666] hover:border-[#007AFF]'
+                            : isPendingCorner
+                              ? 'bg-[#E5F0FF] text-[#007AFF] ring-2 ring-[#007AFF]/30 ring-offset-1'
+                              : isPendingCell
+                                ? 'bg-[#E5F0FF]/60 text-[#007AFF]'
+                                : isHovered
+                                  ? 'bg-[#F5F5F5] text-[#666666]'
+                                  : 'bg-white border border-[#E5E5E5] text-[#666666] hover:border-[#007AFF]'
                         }
                       `}
                     >
-                      {isCornerCell ? `${col}×${row}` : isHovered && !selectedGrid ? `${col}×${row}` : ''}
+                      {(isConfirmedCorner || isPendingCorner) ? `${col}×${row}` : isHovered && !pendingGrid && !confirmedGrid ? `${col}×${row}` : ''}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Status below grid */}
-              <div className="mt-4">
-                {selectedGrid ? (
+              {/* Status and Confirm Button */}
+              <div className="mt-4 flex flex-col gap-2">
+                {pendingGrid ? (
+                  <>
+                    <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#E5F0FF]/50 border border-[#007AFF]/30">
+                      <Grid3X3 className="w-4 h-4 text-[#007AFF]" />
+                      <span className="text-sm font-medium text-[#007AFF]">
+                        {pendingGrid.cols} columns × {pendingGrid.rows} rows
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleConfirmGrid}
+                      className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#007AFF] text-white hover:bg-[#0051D5] transition-colors"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span className="text-sm font-medium">Confirm ({pendingGrid.rows * pendingGrid.cols} pieces)</span>
+                    </button>
+                  </>
+                ) : confirmedGrid ? (
                   <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#F0F9FF] border border-[#007AFF]/20">
                     <Check className="w-4 h-4 text-[#007AFF]" />
                     <span className="text-sm font-medium text-[#007AFF]">
-                      {selectedGrid.cols} columns × {selectedGrid.rows} rows = {selectedGrid.rows * selectedGrid.cols} pieces
+                      {confirmedGrid.cols} columns × {confirmedGrid.rows} rows = {confirmedGrid.rows * confirmedGrid.cols} pieces
                     </span>
                   </div>
                 ) : hoveredGrid ? (
@@ -256,35 +289,6 @@ export const ImageSplitter = () => {
                 )}
               </div>
             </div>
-
-            {/* Selected Grid Preview - Shows the split effect */}
-            {selectedGrid && (
-              <div className="flex flex-col items-center">
-                <span className="text-xs font-medium text-[#666666] mb-2">Split Preview</span>
-                <div
-                  className="grid gap-0.5 p-3 bg-[#FAFAFA] rounded-xl border border-[#E5E5E5]"
-                  style={{
-                    gridTemplateColumns: `repeat(${selectedGrid.cols}, minmax(0, 1fr))`,
-                    width: '160px',
-                    height: '160px'
-                  }}
-                >
-                  {Array.from({ length: selectedGrid.rows * selectedGrid.cols }).map((_, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-gradient-to-br from-[#007AFF] to-[#5856D6] rounded flex items-center justify-center"
-                    >
-                      <span className="text-[10px] font-bold text-white/90">
-                        {idx + 1}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <span className="text-xs text-[#999999] mt-2">
-                  {selectedGrid.cols}×{selectedGrid.rows}
-                </span>
-              </div>
-            )}
           </div>
         </div>
 
@@ -349,7 +353,7 @@ export const ImageSplitter = () => {
         </div>
 
         {/* Preview with Grid Overlay */}
-        {imagePreviewUrl && selectedGrid && (
+        {imagePreviewUrl && confirmedGrid && (
           <div className="mb-8 p-4 bg-white border border-[#E5E5E5] rounded-2xl">
             <h3 className="text-sm font-medium text-[#111111] mb-4">Preview</h3>
             <div className="relative inline-block overflow-hidden rounded-lg mx-auto block w-fit">
@@ -362,18 +366,18 @@ export const ImageSplitter = () => {
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: `repeat(${selectedGrid.cols}, 1fr)`,
-                  gridTemplateRows: `repeat(${selectedGrid.rows}, 1fr)`,
+                  gridTemplateColumns: `repeat(${confirmedGrid.cols}, 1fr)`,
+                  gridTemplateRows: `repeat(${confirmedGrid.rows}, 1fr)`,
                 }}
               >
-                {Array.from({ length: selectedGrid.rows * selectedGrid.cols }).map((_, idx) => (
+                {Array.from({ length: confirmedGrid.rows * confirmedGrid.cols }).map((_, idx) => (
                   <div
                     key={idx}
                     className="border-r border-b border-white/50 last:border-0"
                     style={{
                       // Handle right/bottom borders for the last items in row/col
-                      borderRightWidth: (idx + 1) % selectedGrid.cols === 0 ? '0' : '1px',
-                      borderBottomWidth: idx >= (selectedGrid.rows - 1) * selectedGrid.cols ? '0' : '1px'
+                      borderRightWidth: (idx + 1) % confirmedGrid.cols === 0 ? '0' : '1px',
+                      borderBottomWidth: idx >= (confirmedGrid.rows - 1) * confirmedGrid.cols ? '0' : '1px'
                     }}
                   />
                 ))}
@@ -391,7 +395,7 @@ export const ImageSplitter = () => {
         )}
 
         {/* Results - Displayed in user's selected format */}
-        {splitResults.length > 0 && !isProcessing && selectedGrid && (
+        {splitResults.length > 0 && !isProcessing && confirmedGrid && (
           <div className="mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
               <span className="text-sm font-medium text-[#111111]">
@@ -406,7 +410,7 @@ export const ImageSplitter = () => {
             <div
               className="grid gap-3 mb-8 bg-white p-4 rounded-xl border border-[#E5E5E5]"
               style={{
-                gridTemplateColumns: `repeat(${selectedGrid.cols}, minmax(0, 1fr))`
+                gridTemplateColumns: `repeat(${confirmedGrid.cols}, minmax(0, 1fr))`
               }}
             >
               {splitResults.map((result, index) => (
