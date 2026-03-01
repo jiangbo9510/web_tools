@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe } from 'lucide-react';
+import { Globe, Menu, X } from 'lucide-react';
 
 export const Navbar = () => {
     const { t, i18n } = useTranslation();
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const hostname = window.location.hostname;
 
@@ -28,23 +30,23 @@ export const Navbar = () => {
 
     return (
         <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-            <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div className="w-full px-4 sm:px-8 h-14 sm:h-16 flex items-center justify-between">
                 {/* Logo */}
                 <a href="https://web-tools.work" className="flex items-center gap-2 group">
-                    <span className="text-2xl">🔧</span>
-                    <span className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                    <span className="text-xl sm:text-2xl">🔧</span>
+                    <span className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
                         {t('nav.brand')}
                     </span>
                 </a>
 
-                {/* Navigation Links */}
-                <div className="flex items-center gap-1">
+                {/* Desktop Navigation Links */}
+                <div className="hidden md:flex items-center gap-1">
                     {navLinks.map((link) => (
                         <a
                             key={link.key}
                             href={link.href}
                             className={`
-                px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200
+                px-3 lg:px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200
                 ${isActive(link.key)
                                     ? 'text-purple-600 bg-purple-50'
                                     : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50/50'
@@ -64,7 +66,45 @@ export const Navbar = () => {
                         <span className="font-medium">{i18n.language === 'zh-CN' ? '中' : 'En'}</span>
                     </button>
                 </div>
+
+                {/* Mobile: Language + Hamburger */}
+                <div className="flex md:hidden items-center gap-2">
+                    <button
+                        onClick={toggleLanguage}
+                        className="flex items-center gap-1 px-2 py-1.5 text-sm text-gray-500 rounded-lg"
+                    >
+                        <Globe className="w-4 h-4" />
+                        <span className="font-medium">{i18n.language === 'zh-CN' ? '中' : 'En'}</span>
+                    </button>
+                    <button
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        className="p-2 text-gray-600 hover:text-purple-600 rounded-lg hover:bg-purple-50/50 transition-colors"
+                    >
+                        {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    </button>
+                </div>
             </div>
+
+            {/* Mobile Menu Dropdown */}
+            {mobileMenuOpen && (
+                <div className="md:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1">
+                    {navLinks.map((link) => (
+                        <a
+                            key={link.key}
+                            href={link.href}
+                            className={`
+                block px-4 py-2.5 text-sm font-medium rounded-lg transition-all
+                ${isActive(link.key)
+                                    ? 'text-purple-600 bg-purple-50'
+                                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50/50'
+                                }
+              `}
+                        >
+                            {link.label}
+                        </a>
+                    ))}
+                </div>
+            )}
         </nav>
     );
 };

@@ -7,6 +7,7 @@ import { saveAs } from 'file-saver';
 import {
   Upload,
   Archive,
+  Download,
   X,
   Image as ImageIcon,
   Check
@@ -18,7 +19,7 @@ interface SelectedGrid {
 }
 
 export const ImageSplitter = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [pendingGrid, setPendingGrid] = useState<SelectedGrid | null>(null);
   const [confirmedGrid, setConfirmedGrid] = useState<SelectedGrid | null>(null);
   const [hoveredGrid, setHoveredGrid] = useState<SelectedGrid | null>(null);
@@ -136,22 +137,32 @@ export const ImageSplitter = () => {
     }
   };
 
-  const handleDownload = async () => {
+  // Download as ZIP with named files
+  const handleDownloadZip = async () => {
     if (splitResults.length === 0 || !imageFile) return;
 
     setIsProcessing(true);
     const zip = new JSZip();
     const ext = getExtension(imageFile.type);
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 
     splitResults.forEach((dataUrl, index) => {
       const base64 = dataUrl.split(',')[1];
-      zip.file(`${index + 1}.${ext}`, base64, { base64: true });
+      zip.file(`${imageName}-${index + 1}.${ext}`, base64, { base64: true });
     });
 
     const blob = await zip.generateAsync({ type: 'blob' });
-    saveAs(blob, `${imageName}-${timestamp}.zip`);
+    saveAs(blob, `${imageName}.zip`);
     setIsProcessing(false);
+  };
+
+  // Download single image
+  const handleDownloadSingle = (dataUrl: string, index: number) => {
+    if (!imageFile) return;
+    const ext = getExtension(imageFile.type);
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = `${imageName}-${index + 1}.${ext}`;
+    link.click();
   };
 
   const resetImage = () => {
@@ -183,40 +194,43 @@ export const ImageSplitter = () => {
       <SEO
         title={t('imageSplitter.title')}
         description={t('imageSplitter.description')}
+        keywords={t('imageSplitter.seoKeywords')}
+        canonicalUrl="https://pic.web-tools.work"
+        language={i18n.language}
       />
       <Navbar />
 
-      <div className="px-6 py-10 max-w-6xl mx-auto">
+      <div className="px-4 sm:px-6 py-6 sm:py-10 max-w-6xl mx-auto">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">
             {t('imageSplitter.title')}
           </h1>
-          <p className="text-gray-500">
+          <p className="text-sm sm:text-base text-gray-500">
             {t('imageSplitter.description')}
           </p>
         </div>
 
-        {/* Two-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Two-Column Layout (stacked on mobile) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Left Column: Grid Selector + Upload */}
-          <div className="space-y-6">
+          <div className="space-y-5 sm:space-y-6">
             {/* Grid Selector Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6">
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6">
               <h3 className="text-base font-semibold text-gray-900 mb-1">
                 {t('imageSplitter.selectPattern')}
               </h3>
-              <p className="text-sm text-gray-400 mb-5">
+              <p className="text-sm text-gray-400 mb-4 sm:mb-5">
                 {t('imageSplitter.selectedCount', { count: getSelectedCount() })}
               </p>
 
-              {/* 5x5 Grid */}
+              {/* 5x5 Grid - responsive cell sizes */}
               <div className="flex justify-center mb-4">
                 <div
-                  className="grid gap-1.5"
+                  className="grid gap-1 sm:gap-1.5"
                   style={{
-                    gridTemplateColumns: `repeat(${gridSize}, 44px)`,
-                    gridTemplateRows: `repeat(${gridSize}, 44px)`
+                    gridTemplateColumns: `repeat(${gridSize}, minmax(36px, 44px))`,
+                    gridTemplateRows: `repeat(${gridSize}, minmax(36px, 44px))`
                   }}
                 >
                   {Array.from({ length: gridSize * gridSize }).map((_, idx) => {
@@ -236,7 +250,7 @@ export const ImageSplitter = () => {
                         onMouseLeave={() => setHoveredGrid(null)}
                         onClick={() => handleGridSelect(row, col)}
                         className={`
-                          w-11 h-11 rounded-lg transition-all duration-150 text-xs font-medium border
+                          aspect-square rounded-lg transition-all duration-150 text-xs font-medium border
                           ${isConfirmedCorner
                             ? 'bg-purple-600 text-white border-purple-600 ring-2 ring-purple-300 ring-offset-1'
                             : isConfirmedCell
@@ -263,7 +277,7 @@ export const ImageSplitter = () => {
                 <div className="flex flex-col gap-2 mt-2">
                   <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-purple-50 border border-purple-200">
                     <span className="text-sm font-medium text-purple-600">
-                      {pendingGrid.cols} × {pendingGrid.rows} = {pendingGrid.rows * pendingGrid.cols} {t('imageSplitter.pieceCount', { count: pendingGrid.rows * pendingGrid.cols }).split(' ').pop()}
+                      {pendingGrid.cols} × {pendingGrid.rows} = {pendingGrid.rows * pendingGrid.cols}
                     </span>
                   </div>
                   <button
@@ -283,7 +297,7 @@ export const ImageSplitter = () => {
             </div>
 
             {/* Upload Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6">
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6">
               <h3 className="text-base font-semibold text-gray-900 mb-4">
                 {t('imageSplitter.uploadImage')}
               </h3>
@@ -293,7 +307,7 @@ export const ImageSplitter = () => {
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
                 className={`
-                  relative border-2 border-dashed rounded-xl p-6 cursor-pointer transition-all duration-200
+                  relative border-2 border-dashed rounded-xl p-4 sm:p-6 cursor-pointer transition-all duration-200
                   ${imageFile
                     ? 'border-gray-200 hover:border-gray-400'
                     : 'border-gray-200 hover:border-purple-400 hover:bg-purple-50/30'
@@ -302,12 +316,12 @@ export const ImageSplitter = () => {
               >
                 {imageFile ? (
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
                         <ImageIcon className="w-5 h-5 text-purple-600" />
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
                           {imageFile.name}
                         </p>
                         <p className="text-xs text-gray-400">
@@ -317,7 +331,7 @@ export const ImageSplitter = () => {
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); resetImage(); }}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                     >
                       <X className="w-4 h-4 text-gray-400" />
                     </button>
@@ -348,8 +362,8 @@ export const ImageSplitter = () => {
           </div>
 
           {/* Right Column: Preview & Results */}
-          <div className="space-y-6">
-            <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <div className="space-y-5 sm:space-y-6">
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6">
               <h3 className="text-base font-semibold text-gray-900 mb-4">
                 {t('imageSplitter.previewTitle')}
               </h3>
@@ -400,53 +414,70 @@ export const ImageSplitter = () => {
                   {splitResults.length > 0 && !isProcessing && (
                     <div>
                       <p className="text-sm font-medium text-gray-500 mb-3">
-                        {t('imageSplitter.splitResult')} ({splitResults.length} {t('imageSplitter.pieceCount', { count: splitResults.length }).split(' ').pop()})
+                        {t('imageSplitter.splitResult')} ({splitResults.length})
                       </p>
 
                       <div
-                        className="grid gap-3"
+                        className="grid gap-2 sm:gap-3"
                         style={{
                           gridTemplateColumns: `repeat(${confirmedGrid.cols}, minmax(0, 1fr))`
                         }}
                       >
                         {splitResults.map((result, index) => (
-                          <div key={index} className="flex flex-col items-center gap-1.5">
-                            <img
-                              src={result}
-                              alt={`Piece ${index + 1}`}
-                              className="w-full h-auto rounded-lg border border-gray-200"
-                            />
-                            <span className="text-xs text-gray-400 font-medium">
-                              {t('imageSplitter.piece', { index: index + 1 })}
+                          <div key={index} className="flex flex-col items-center gap-1">
+                            <div className="relative group w-full">
+                              <img
+                                src={result}
+                                alt={`${imageName}-${index + 1}`}
+                                className="w-full h-auto rounded-lg border border-gray-200"
+                              />
+                              {/* Individual download overlay */}
+                              <button
+                                onClick={() => handleDownloadSingle(result, index)}
+                                className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
+                                title={`${t('common.download')} ${imageName}-${index + 1}`}
+                              >
+                                <Download className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                              </button>
+                            </div>
+                            <span className="text-xs text-gray-400 font-medium truncate max-w-full">
+                              {imageName}-{index + 1}
                             </span>
                           </div>
                         ))}
                       </div>
 
                       {/* Success Message */}
-                      <div className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-50 border border-green-200">
-                        <Check className="w-4 h-4 text-green-600" />
-                        <span className="text-sm text-green-700">{t('imageSplitter.splitSuccess')}</span>
+                      <div className="mt-4 flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-green-50 border border-green-200">
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm text-green-700">{t('imageSplitter.splitSuccess')}</span>
                       </div>
 
-                      {/* Download Button */}
-                      <div className="mt-4 flex justify-center">
+                      {/* Download Buttons */}
+                      <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
                         <button
-                          onClick={handleDownload}
-                          className="flex items-center gap-3 px-8 py-3 text-white rounded-xl font-medium hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                          onClick={handleDownloadZip}
+                          className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 text-white rounded-xl font-medium text-sm hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                           style={{ background: 'linear-gradient(135deg, #7C3AED, #A855F7)' }}
                         >
-                          <Archive className="w-5 h-5" />
-                          <span>{t('imageSplitter.downloadAll')}</span>
+                          <Archive className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span>{t('imageSplitter.downloadZip')}</span>
+                        </button>
+                        <button
+                          onClick={() => splitResults.forEach((r, i) => handleDownloadSingle(r, i))}
+                          className="flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 text-purple-600 bg-purple-50 border border-purple-200 rounded-xl font-medium text-sm hover:bg-purple-100 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                        >
+                          <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span>{t('imageSplitter.downloadEach')}</span>
                         </button>
                       </div>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-200">
-                    <ImageIcon className="w-8 h-8 text-gray-300" />
+                <div className="text-center py-12 sm:py-16">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-200">
+                    <ImageIcon className="w-7 h-7 sm:w-8 sm:h-8 text-gray-300" />
                   </div>
                   <p className="text-sm text-gray-400">
                     {!confirmedGrid ? t('imageSplitter.selectGridFirst') : t('imageSplitter.selectImageFirst')}

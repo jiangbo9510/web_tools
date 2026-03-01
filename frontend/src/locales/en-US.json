@@ -38,8 +38,9 @@
       }
     },
     "imageSplitter": {
-      "title": "Image Grid Splitter",
+      "title": "Image Grid Splitter - Free Online Image Cutter",
       "description": "Choose split style, upload image, preview results in real-time. Local processing, data stays safe.",
+      "seoKeywords": "image splitter,grid cutter,image grid,photo splitter,instagram grid,nine grid,free image tool",
       "selectPattern": "Select Split Style",
       "selectedCount": "Selected {{count}} regions",
       "gridHint": "Click grid cells to select regions to split. Selected regions will be highlighted in purple.",
@@ -55,6 +56,8 @@
       "selectImage": "Select Image",
       "preview": "Preview",
       "downloadAll": "Download All Pieces",
+      "downloadZip": "Download ZIP",
+      "downloadEach": "Download Each",
       "processing": "Processing...",
       "downloadSuccess": "Download successful",
       "downloadError": "Download failed",
@@ -64,6 +67,8 @@
     "clipboard": {
       "title": "Cross-Device Cloud Clipboard - E2EE",
       "description": "Secure, real-time cross-platform text synchronization tool. End-to-end encryption with keys stored locally only.",
+      "seoKeywords": "cloud clipboard,cross-device clipboard,online clipboard,text sync,end-to-end encryption,cross-platform transfer",
+      "e2eeLabel": "End-to-End Encrypted",
       "password": "Password:",
       "passwordPlaceholder": "Enter password to join channel",
       "enterChannel": "Enter",

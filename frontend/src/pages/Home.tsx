@@ -42,22 +42,22 @@ export const Home = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <div className="px-6 pt-20 pb-16 max-w-5xl mx-auto">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mb-5">
+      <div className="px-4 sm:px-6 pt-12 sm:pt-20 pb-10 sm:pb-16 max-w-5xl mx-auto">
+        <div className="text-center mb-10 sm:mb-16">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mb-4 sm:mb-5">
             {t('home.welcome')}
           </h1>
-          <p className="text-lg text-gray-500 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-sm sm:text-lg text-gray-500 leading-relaxed max-w-2xl mx-auto">
             {t('home.description')}
           </p>
         </div>
 
         {/* Tool Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {tools.map((tool, index) => (
             <div
               key={index}
-              className="group relative flex flex-col bg-white rounded-2xl border border-gray-200 p-7 hover:shadow-lg hover:border-gray-300 transition-all duration-300"
+              className="group relative flex flex-col bg-white rounded-2xl border border-gray-200 p-5 sm:p-7 hover:shadow-lg hover:border-gray-300 transition-all duration-300"
             >
               {/* Icon Badge */}
               <div

@@ -38,8 +38,9 @@
       }
     },
     "imageSplitter": {
-      "title": "图片格栅切分工具",
+      "title": "图片格栅切分工具 - 免费在线九宫格切图",
       "description": "选择切分样式，上传图片，实时查看切分效果，本地切分，数据安全。",
+      "seoKeywords": "图片切分,九宫格切图,在线切图工具,图片分割,宫格切分,社交媒体切图,免费切图",
       "selectPattern": "选择切分样式",
       "selectedCount": "已选择 {{count}} 个区域",
       "gridHint": "点击网格单元格选择要切分的区域。选中的区域将以紫色高亮显示。",
@@ -55,6 +56,8 @@
       "selectImage": "选择图片",
       "preview": "预览",
       "downloadAll": "打包下载所有切片",
+      "downloadZip": "下载 ZIP 包",
+      "downloadEach": "逐张下载",
       "processing": "处理中...",
       "downloadSuccess": "下载成功",
       "downloadError": "下载失败",
@@ -64,6 +67,8 @@
     "clipboard": {
       "title": "跨设备云剪贴板 - E2EE加密",
       "description": "安全、实时的跨平台文本同步工具。端到端加密，密钥仅存储在本地，确保数据安全。",
+      "seoKeywords": "云剪贴板,跨设备剪贴板,在线剪贴板,文本同步,端到端加密,跨平台传输",
+      "e2eeLabel": "端到端加密",
       "password": "密码：",
       "passwordPlaceholder": "输入密码进入频道",
       "enterChannel": "进入",
