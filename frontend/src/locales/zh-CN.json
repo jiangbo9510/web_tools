@@ -10,30 +10,49 @@
       "confirm": "确认",
       "close": "关闭"
     },
-    "header": {
-      "language": "语言"
+    "nav": {
+      "brand": "工具箱",
+      "home": "首页",
+      "imageSplitter": "图片切分",
+      "clipboard": "在线剪贴板",
+      "fileTransfer": "文件传输"
     },
     "home": {
       "title": "多功能在线工具箱",
-      "description": "免费、安全、高效的在线工具集合",
+      "welcome": "欢迎来到工具箱",
+      "description": "一站式在线工具集合，提供图片处理、文本同步、文件传输等实用功能。选择下方任意工具开始使用。",
+      "startUsing": "开始使用",
       "tools": {
         "imageSplitter": {
-          "title": "图片切分工具",
-          "description": "无需上传，本地浏览器极速切分图片为九宫格或自定义网格"
+          "title": "图片格栅化切分",
+          "description": "支持5x5自定义宫格切分，实时预览导出，让你的社交媒体配图更具创意。"
         },
         "clipboard": {
-          "title": "跨设备云剪贴板",
-          "description": "安全、实时的跨平台文本同步工具，支持端到端加密"
+          "title": "加密在线剪贴板",
+          "description": "基于密码的实时文本同步工具。输入相同密码即可在不同设备间瞬间传递文字。"
+        },
+        "fileTransfer": {
+          "title": "安全文件传输",
+          "description": "通过提取码进行文件点对点传输。支持加密上传，保护隐私，文件到期自动销毁。"
         }
       }
     },
     "imageSplitter": {
-      "title": "在线图片切分工具 - 免费九宫格切图",
-      "description": "无需上传，本地浏览器极速切分图片为九宫格或自定义网格。支持任意尺寸图片，一键打包下载所有切片。",
+      "title": "图片格栅切分工具",
+      "description": "选择切分样式，上传图片，实时查看切分效果，本地切分，数据安全。",
+      "selectPattern": "选择切分样式",
+      "selectedCount": "已选择 {{count}} 个区域",
+      "gridHint": "点击网格单元格选择要切分的区域。选中的区域将以紫色高亮显示。",
+      "uploadImage": "上传图片",
+      "previewTitle": "切分效果预览",
+      "originalImage": "原始图片",
+      "splitResult": "切分效果",
+      "pieceCount": "{{count}} 个片段",
+      "piece": "片段 {{index}}",
+      "splitSuccess": "✓ 切分完成！您可以右键点击图片进行下载",
       "selectGrid": "选择切分网格",
       "gridSize": "网格大小",
       "selectImage": "选择图片",
-      "uploadImage": "点击或拖拽上传图片",
       "preview": "预览",
       "downloadAll": "打包下载所有切片",
       "processing": "处理中...",
@@ -45,6 +64,17 @@
     "clipboard": {
       "title": "跨设备云剪贴板 - E2EE加密",
       "description": "安全、实时的跨平台文本同步工具。端到端加密，密钥仅存储在本地，确保数据安全。",
+      "password": "密码：",
+      "passwordPlaceholder": "输入密码进入频道",
+      "enterChannel": "进入",
+      "channelLabel": "频道：",
+      "messageCount": "{{count}} 条消息",
+      "receiveArea": "接收区",
+      "sendArea": "发送区",
+      "inputPlaceholder": "输入消息内容（Ctrl+Enter 发送）",
+      "charCount": "{{current}}/{{max}}",
+      "send": "发送",
+      "encryptionNote": "所有消息已加密，仅在相同密码的频道中可见",
       "step1": "1. 设置密钥",
       "step2": "2. 连接状态",
       "step3": "3. 发送消息",

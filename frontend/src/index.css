@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 * {
   margin: 0;
@@ -19,12 +17,14 @@ body {
   text-rendering: optimizeLegibility;
   font-feature-settings: 'kern' 1;
   font-kerning: normal;
+  background-color: #FFFFFF;
+  color: #111111;
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -33,34 +33,23 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.3);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.5);
 }
 
-/* Dark mode scrollbar */
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.3);
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(75, 85, 99, 0.5);
-}
-
 /* Focus visible for accessibility */
 :focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid #7C3AED;
   outline-offset: 2px;
 }
 
 /* Smooth transitions */
-button, a, input, textarea {
+button,
+a,
+input,
+textarea {
   transition: all 0.2s ease-in-out;
-}
-
-/* Radial gradient utility */
-.bg-radial-gradient {
-  background: radial-gradient(circle at center, var(--tw-gradient-from), var(--tw-gradient-via), transparent);
 }

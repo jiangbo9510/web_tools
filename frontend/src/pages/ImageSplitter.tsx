@@ -1,11 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
+import { Navbar } from '../components/Navbar';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import {
   Upload,
-  Grid3X3,
   Archive,
   X,
   Image as ImageIcon,
@@ -31,7 +31,6 @@ export const ImageSplitter = () => {
 
   const gridSize = 5;
 
-  // Cleanup object URL on unmount or when image changes
   useEffect(() => {
     return () => {
       if (imagePreviewUrl) {
@@ -106,7 +105,6 @@ export const ImageSplitter = () => {
     const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
     setImageName(nameWithoutExt);
 
-    // Create preview URL
     const previewUrl = URL.createObjectURL(file);
     setImagePreviewUrl(previewUrl);
 
@@ -174,281 +172,290 @@ export const ImageSplitter = () => {
     return row <= hoveredGrid.rows && col <= hoveredGrid.cols;
   };
 
+  const getSelectedCount = () => {
+    if (confirmedGrid) return confirmedGrid.rows * confirmedGrid.cols;
+    if (pendingGrid) return pendingGrid.rows * pendingGrid.cols;
+    return 0;
+  };
+
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-white">
       <SEO
         title={t('imageSplitter.title')}
         description={t('imageSplitter.description')}
       />
+      <Navbar />
 
-      <div className="px-6 py-16 max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-semibold text-[#111111] mb-3">
-            {t('imageSplitter.title').split(' - ')[0]}
+      <div className="px-6 py-10 max-w-6xl mx-auto">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            {t('imageSplitter.title')}
           </h1>
-          <p className="text-[#666666]">
+          <p className="text-gray-500">
             {t('imageSplitter.description')}
           </p>
         </div>
 
-        {/* 5x5 Grid Selector - Fixed at Top */}
-        <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6 mb-8 shadow-sm">
-          <div className="flex items-center gap-3 mb-5">
-            <Grid3X3 className="w-5 h-5 text-[#666666]" />
-            <span className="text-sm font-medium text-[#111111]">
-              Select Grid Size
-            </span>
-          </div>
+        {/* Two-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column: Grid Selector + Upload */}
+          <div className="space-y-6">
+            {/* Grid Selector Card */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6">
+              <h3 className="text-base font-semibold text-gray-900 mb-1">
+                {t('imageSplitter.selectPattern')}
+              </h3>
+              <p className="text-sm text-gray-400 mb-5">
+                {t('imageSplitter.selectedCount', { count: getSelectedCount() })}
+              </p>
 
-          <div className="flex flex-wrap gap-8 items-start justify-center">
-            {/* 5x5 Visual Grid - Always visible */}
-            <div className="flex flex-col items-center">
-              <div
-                className="grid gap-1 p-4 bg-[#FAFAFA] rounded-xl border border-[#E5E5E5]"
-                style={{
-                  gridTemplateColumns: `repeat(${gridSize}, 40px)`,
-                  gridTemplateRows: `repeat(${gridSize}, 40px)`
-                }}
-              >
-                {Array.from({ length: gridSize * gridSize }).map((_, idx) => {
-                  const row = Math.floor(idx / gridSize) + 1;
-                  const col = (idx % gridSize) + 1;
-
-                  // Check confirmed selection (dark blue)
-                  const isConfirmedCell = confirmedGrid && row <= confirmedGrid.rows && col <= confirmedGrid.cols;
-                  const isConfirmedCorner = confirmedGrid?.rows === row && confirmedGrid?.cols === col;
-
-                  // Check pending selection (light blue)
-                  const isPendingCell = pendingGrid && row <= pendingGrid.rows && col <= pendingGrid.cols;
-                  const isPendingCorner = pendingGrid?.rows === row && pendingGrid?.cols === col;
-
-                  const isHovered = isHighlighted(row, col);
-
-                  return (
-                    <button
-                      key={idx}
-                      onMouseEnter={() => setHoveredGrid({ rows: row, cols: col })}
-                      onMouseLeave={() => setHoveredGrid(null)}
-                      onClick={() => handleGridSelect(row, col)}
-                      className={`
-                        w-10 h-10 rounded-lg transition-all duration-150 text-xs font-medium
-                        ${isConfirmedCorner
-                          ? 'bg-[#007AFF] text-white ring-2 ring-[#007AFF] ring-offset-1'
-                          : isConfirmedCell
-                            ? 'bg-[#007AFF]/80 text-white'
-                            : isPendingCorner
-                              ? 'bg-[#E5F0FF] text-[#007AFF] ring-2 ring-[#007AFF]/30 ring-offset-1'
-                              : isPendingCell
-                                ? 'bg-[#E5F0FF]/60 text-[#007AFF]'
-                                : isHovered
-                                  ? 'bg-[#F5F5F5] text-[#666666]'
-                                  : 'bg-white border border-[#E5E5E5] text-[#666666] hover:border-[#007AFF]'
-                        }
-                      `}
-                    >
-                      {(isConfirmedCorner || isPendingCorner) ? `${col}×${row}` : isHovered && !pendingGrid && !confirmedGrid ? `${col}×${row}` : ''}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Status and Confirm Button */}
-              <div className="mt-4 flex flex-col gap-2">
-                {pendingGrid ? (
-                  <>
-                    <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#E5F0FF]/50 border border-[#007AFF]/30">
-                      <Grid3X3 className="w-4 h-4 text-[#007AFF]" />
-                      <span className="text-sm font-medium text-[#007AFF]">
-                        {pendingGrid.cols} columns × {pendingGrid.rows} rows
-                      </span>
-                    </div>
-                    <button
-                      onClick={handleConfirmGrid}
-                      className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#007AFF] text-white hover:bg-[#0051D5] transition-colors"
-                    >
-                      <Check className="w-4 h-4" />
-                      <span className="text-sm font-medium">Confirm ({pendingGrid.rows * pendingGrid.cols} pieces)</span>
-                    </button>
-                  </>
-                ) : confirmedGrid ? (
-                  <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#F0F9FF] border border-[#007AFF]/20">
-                    <Check className="w-4 h-4 text-[#007AFF]" />
-                    <span className="text-sm font-medium text-[#007AFF]">
-                      {confirmedGrid.cols} columns × {confirmedGrid.rows} rows = {confirmedGrid.rows * confirmedGrid.cols} pieces
-                    </span>
-                  </div>
-                ) : hoveredGrid ? (
-                  <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5]">
-                    <Grid3X3 className="w-4 h-4 text-[#666666]" />
-                    <span className="text-sm text-[#666666]">
-                      {hoveredGrid.cols} columns × {hoveredGrid.rows} rows
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5]">
-                    <span className="text-sm text-[#999999]">Click a cell to select grid size</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* File Upload */}
-        <div className="mb-8">
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            className={`
-              relative bg-white border-2 border-dashed rounded-2xl p-6 cursor-pointer transition-all duration-200
-              ${imageFile
-                ? 'border-[#E5E5E5] hover:border-[#999999]'
-                : 'border-[#E5E5E5] hover:border-[#007AFF]'
-              }
-            `}
-          >
-            {imageFile ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#F0F9FF] flex items-center justify-center">
-                    <ImageIcon className="w-5 h-5 text-[#007AFF]" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-[#111111] truncate max-w-[300px]">
-                      {imageFile.name}
-                    </p>
-                    <p className="text-xs text-[#999999]">
-                      {getExtension(imageFile.type).toUpperCase()}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); resetImage(); }}
-                  className="p-2 hover:bg-[#F5F5F5] rounded-lg transition-colors"
-                >
-                  <X className="w-4 h-4 text-[#666666]" />
-                </button>
-              </div>
-            ) : (
-              <div className="text-center py-2">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#FAFAFA] flex items-center justify-center border border-[#E5E5E5]">
-                  <Upload className="w-5 h-5 text-[#666666]" />
-                </div>
-                <p className="text-[#111111] font-medium mb-1">
-                  Click or drag to upload
-                </p>
-                <p className="text-sm text-[#999999]">
-                  JPG, PNG, WebP, GIF
-                </p>
-              </div>
-            )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleInputChange}
-              className="hidden"
-            />
-          </div>
-        </div>
-
-        {/* Preview with Grid Overlay */}
-        {imagePreviewUrl && confirmedGrid && (
-          <div className="mb-8 p-6 bg-white border border-[#E5E5E5] rounded-2xl shadow-sm">
-            <h3 className="text-sm font-medium text-[#111111] mb-4 text-center">Preview with Grid Overlay</h3>
-            <div className="flex justify-center">
-              <div className="relative inline-block overflow-hidden rounded-lg shadow-md">
-                <img
-                  src={imagePreviewUrl}
-                  alt="Preview"
-                  className="max-w-[100%] max-h-[500px] object-contain block"
-                />
+              {/* 5x5 Grid */}
+              <div className="flex justify-center mb-4">
                 <div
-                  className="absolute inset-0 pointer-events-none"
+                  className="grid gap-1.5"
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${confirmedGrid.cols}, 1fr)`,
-                    gridTemplateRows: `repeat(${confirmedGrid.rows}, 1fr)`,
+                    gridTemplateColumns: `repeat(${gridSize}, 44px)`,
+                    gridTemplateRows: `repeat(${gridSize}, 44px)`
                   }}
                 >
-                  {Array.from({ length: confirmedGrid.rows * confirmedGrid.cols }).map((_, idx) => (
-                    <div
-                      key={idx}
-                      className="border-r border-b border-white/50 last:border-0"
-                      style={{
-                        // Handle right/bottom borders for the last items in row/col
-                        borderRightWidth: (idx + 1) % confirmedGrid.cols === 0 ? '0' : '1px',
-                        borderBottomWidth: idx >= (confirmedGrid.rows - 1) * confirmedGrid.cols ? '0' : '1px'
-                      }}
-                    />
-                  ))}
+                  {Array.from({ length: gridSize * gridSize }).map((_, idx) => {
+                    const row = Math.floor(idx / gridSize) + 1;
+                    const col = (idx % gridSize) + 1;
+
+                    const isConfirmedCell = confirmedGrid && row <= confirmedGrid.rows && col <= confirmedGrid.cols;
+                    const isConfirmedCorner = confirmedGrid?.rows === row && confirmedGrid?.cols === col;
+                    const isPendingCell = pendingGrid && row <= pendingGrid.rows && col <= pendingGrid.cols;
+                    const isPendingCorner = pendingGrid?.rows === row && pendingGrid?.cols === col;
+                    const isHovered = isHighlighted(row, col);
+
+                    return (
+                      <button
+                        key={idx}
+                        onMouseEnter={() => setHoveredGrid({ rows: row, cols: col })}
+                        onMouseLeave={() => setHoveredGrid(null)}
+                        onClick={() => handleGridSelect(row, col)}
+                        className={`
+                          w-11 h-11 rounded-lg transition-all duration-150 text-xs font-medium border
+                          ${isConfirmedCorner
+                            ? 'bg-purple-600 text-white border-purple-600 ring-2 ring-purple-300 ring-offset-1'
+                            : isConfirmedCell
+                              ? 'bg-purple-500 text-white border-purple-500'
+                              : isPendingCorner
+                                ? 'bg-purple-100 text-purple-600 border-purple-300 ring-2 ring-purple-200 ring-offset-1'
+                                : isPendingCell
+                                  ? 'bg-purple-50 text-purple-500 border-purple-200'
+                                  : isHovered
+                                    ? 'bg-gray-100 text-gray-500 border-gray-300'
+                                    : 'bg-white border-gray-200 text-gray-400 hover:border-purple-300'
+                          }
+                        `}
+                      >
+                        {(isConfirmedCorner || isPendingCorner) ? `${col}×${row}` : isHovered && !pendingGrid && !confirmedGrid ? `${col}×${row}` : ''}
+                      </button>
+                    );
+                  })}
                 </div>
+              </div>
+
+              {/* Status & Confirm */}
+              {pendingGrid && (
+                <div className="flex flex-col gap-2 mt-2">
+                  <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-purple-50 border border-purple-200">
+                    <span className="text-sm font-medium text-purple-600">
+                      {pendingGrid.cols} × {pendingGrid.rows} = {pendingGrid.rows * pendingGrid.cols} {t('imageSplitter.pieceCount', { count: pendingGrid.rows * pendingGrid.cols }).split(' ').pop()}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleConfirmGrid}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white font-medium text-sm transition-all duration-200 hover:shadow-md"
+                    style={{ background: 'linear-gradient(135deg, #7C3AED, #A855F7)' }}
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>{t('common.confirm')} ({pendingGrid.rows * pendingGrid.cols})</span>
+                  </button>
+                </div>
+              )}
+
+              <p className="text-xs text-gray-400 mt-4 text-center">
+                {t('imageSplitter.gridHint')}
+              </p>
+            </div>
+
+            {/* Upload Card */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6">
+              <h3 className="text-base font-semibold text-gray-900 mb-4">
+                {t('imageSplitter.uploadImage')}
+              </h3>
+
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                className={`
+                  relative border-2 border-dashed rounded-xl p-6 cursor-pointer transition-all duration-200
+                  ${imageFile
+                    ? 'border-gray-200 hover:border-gray-400'
+                    : 'border-gray-200 hover:border-purple-400 hover:bg-purple-50/30'
+                  }
+                `}
+              >
+                {imageFile ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                          {imageFile.name}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {getExtension(imageFile.type).toUpperCase()}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); resetImage(); }}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-50 flex items-center justify-center border border-gray-200">
+                      <Upload className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <p className="text-gray-700 font-medium mb-1">
+                      {t('imageSplitter.uploadImage')}
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      JPG, PNG, WebP, GIF
+                    </p>
+                  </div>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleInputChange}
+                  className="hidden"
+                />
               </div>
             </div>
           </div>
-        )}
 
-        {/* Processing State */}
-        {isProcessing && (
-          <div className="mb-8 flex items-center justify-center gap-2 text-[#666666]">
-            <div className="w-5 h-5 border-2 border-[#E5E5E5] border-t-[#007AFF] rounded-full animate-spin" />
-            <span className="text-sm">Processing...</span>
-          </div>
-        )}
+          {/* Right Column: Preview & Results */}
+          <div className="space-y-6">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6">
+              <h3 className="text-base font-semibold text-gray-900 mb-4">
+                {t('imageSplitter.previewTitle')}
+              </h3>
 
-        {/* Results - Displayed in user's selected format */}
-        {splitResults.length > 0 && !isProcessing && confirmedGrid && (
-          <div className="mb-8">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <span className="text-sm font-medium text-[#111111]">
-                {splitResults.length} pieces
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded bg-[#FAFAFA] text-[#666666] border border-[#E5E5E5]">
-                {getExtension(imageFile?.type || 'image/png').toUpperCase()}
-              </span>
-            </div>
+              {/* Original Image Preview */}
+              {imagePreviewUrl && confirmedGrid ? (
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 mb-3">{t('imageSplitter.originalImage')}</p>
+                    <div className="relative inline-block overflow-hidden rounded-xl w-full">
+                      <img
+                        src={imagePreviewUrl}
+                        alt="Preview"
+                        className="w-full h-auto object-contain block rounded-xl"
+                      />
+                      {/* Grid Overlay */}
+                      <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: `repeat(${confirmedGrid.cols}, 1fr)`,
+                          gridTemplateRows: `repeat(${confirmedGrid.rows}, 1fr)`,
+                        }}
+                      >
+                        {Array.from({ length: confirmedGrid.rows * confirmedGrid.cols }).map((_, idx) => (
+                          <div
+                            key={idx}
+                            className="border-r border-b border-white/60"
+                            style={{
+                              borderRightWidth: (idx + 1) % confirmedGrid.cols === 0 ? '0' : '1px',
+                              borderBottomWidth: idx >= (confirmedGrid.rows - 1) * confirmedGrid.cols ? '0' : '1px'
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
 
-            {/* Grid displayed in user's selected format (cols x rows) */}
-            <div
-              className="grid gap-3 mb-8 bg-white p-4 rounded-xl border border-[#E5E5E5]"
-              style={{
-                gridTemplateColumns: `repeat(${confirmedGrid.cols}, minmax(0, 1fr))`
-              }}
-            >
-              {splitResults.map((result, index) => (
-                <div key={index} className="flex flex-col items-center gap-2">
-                  <img
-                    src={result}
-                    alt={`Piece ${index + 1}`}
-                    className="w-full h-auto rounded-lg border border-[#E5E5E5] shadow-sm"
-                  />
-                  <span className="inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full bg-[#F0F9FF] border border-[#007AFF]/20 text-xs font-medium text-[#007AFF]">
-                    {index + 1}
-                  </span>
+                  {/* Processing State */}
+                  {isProcessing && (
+                    <div className="flex items-center justify-center gap-2 text-gray-500 py-4">
+                      <div className="w-5 h-5 border-2 border-gray-200 border-t-purple-600 rounded-full animate-spin" />
+                      <span className="text-sm">{t('imageSplitter.processing')}</span>
+                    </div>
+                  )}
+
+                  {/* Split Results */}
+                  {splitResults.length > 0 && !isProcessing && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 mb-3">
+                        {t('imageSplitter.splitResult')} ({splitResults.length} {t('imageSplitter.pieceCount', { count: splitResults.length }).split(' ').pop()})
+                      </p>
+
+                      <div
+                        className="grid gap-3"
+                        style={{
+                          gridTemplateColumns: `repeat(${confirmedGrid.cols}, minmax(0, 1fr))`
+                        }}
+                      >
+                        {splitResults.map((result, index) => (
+                          <div key={index} className="flex flex-col items-center gap-1.5">
+                            <img
+                              src={result}
+                              alt={`Piece ${index + 1}`}
+                              className="w-full h-auto rounded-lg border border-gray-200"
+                            />
+                            <span className="text-xs text-gray-400 font-medium">
+                              {t('imageSplitter.piece', { index: index + 1 })}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Success Message */}
+                      <div className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-green-50 border border-green-200">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span className="text-sm text-green-700">{t('imageSplitter.splitSuccess')}</span>
+                      </div>
+
+                      {/* Download Button */}
+                      <div className="mt-4 flex justify-center">
+                        <button
+                          onClick={handleDownload}
+                          className="flex items-center gap-3 px-8 py-3 text-white rounded-xl font-medium hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                          style={{ background: 'linear-gradient(135deg, #7C3AED, #A855F7)' }}
+                        >
+                          <Archive className="w-5 h-5" />
+                          <span>{t('imageSplitter.downloadAll')}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-
-            {/* Download Button - Centered at Bottom */}
-            <div className="flex justify-center">
-              <button
-                onClick={handleDownload}
-                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#007AFF] to-[#5856D6] text-white rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-200"
-              >
-                <Archive className="w-6 h-6" />
-                <span>Download ZIP</span>
-              </button>
+              ) : (
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-200">
+                    <ImageIcon className="w-8 h-8 text-gray-300" />
+                  </div>
+                  <p className="text-sm text-gray-400">
+                    {!confirmedGrid ? t('imageSplitter.selectGridFirst') : t('imageSplitter.selectImageFirst')}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-        )}
-
-        {/* Footer */}
-        <p className="text-center text-xs text-[#999999]">
-          All tools run locally in your browser
-        </p>
+        </div>
       </div>
     </div>
   );

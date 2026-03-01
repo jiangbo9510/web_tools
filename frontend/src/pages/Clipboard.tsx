@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
+import { Navbar } from '../components/Navbar';
 import CryptoJS from 'crypto-js';
-import { Send, Copy, Check, Key, Wifi, MessageSquare, Lock, RefreshCw, AlertCircle } from 'lucide-react';
+import { Send, Copy, Check, Eye, EyeOff, Lock, Wifi, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface Message {
   content: string;
@@ -20,12 +21,16 @@ export const Clipboard = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [reconnectCount, setReconnectCount] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
-  const keyRef = useRef(''); // 用 ref 存储 key 避免闭包问题
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const keyRef = useRef('');
+
+  const maxMessageLength = 5000;
 
   const getWebSocketUrl = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -40,6 +45,11 @@ export const Clipboard = () => {
       timestamp: new Date(),
     }]);
   }, []);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const connectWebSocket = useCallback((hash: string, isRetry = false) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -125,12 +135,12 @@ export const Clipboard = () => {
 
   const handleSetKey = useCallback(() => {
     const trimmedKey = key.trim();
-    if (!trimmedKey || !/^[a-zA-Z0-9]+$/.test(trimmedKey)) {
+    if (!trimmedKey || !/^[a-zA-Z0-9_]+$/.test(trimmedKey)) {
       addMessage(t('clipboard.invalidKey'), 'error');
       return;
     }
 
-    keyRef.current = trimmedKey; // 存储到 ref
+    keyRef.current = trimmedKey;
     const hash = CryptoJS.MD5(trimmedKey).toString();
     setKeyHash(hash);
     setIsKeySet(true);
@@ -212,7 +222,7 @@ export const Clipboard = () => {
     };
   }, []);
 
-  const getConnectionStatusColor = () => {
+  const getConnectionDot = () => {
     switch (connectionStatus) {
       case 'connected': return 'bg-green-500';
       case 'connecting': return 'bg-yellow-500 animate-pulse';
@@ -221,258 +231,157 @@ export const Clipboard = () => {
     }
   };
 
-  const getConnectionStatusText = () => {
-    switch (connectionStatus) {
-      case 'connected': return t('clipboard.connected');
-      case 'connecting': return t('clipboard.connecting');
-      case 'error': return t('clipboard.connectionError');
-      default: return t('clipboard.notConnected');
-    }
-  };
+  const receivedMessages = messages.filter(m => m.type === 'received' || m.type === 'success');
+  const messageCountText = t('clipboard.messageCount', { count: receivedMessages.length });
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       <SEO
         title={t('clipboard.title')}
         description={t('clipboard.description')}
       />
+      <Navbar />
 
-      {/* Background Pattern */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-      </div>
-
-      <div className="relative flex flex-col items-center justify-center min-h-screen px-6 py-16">
-        {/* Header */}
-        <div className="w-full max-w-2xl mx-auto text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E5E5E5] mb-6">
-            <Lock className="w-3.5 h-3.5 text-[#34C759]" />
-            <span className="text-xs font-medium text-[#666666]">
-              End-to-End Encrypted
-            </span>
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-6 py-6">
+        {/* Password Input Section */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-2 text-gray-500">
+            <Lock className="w-4 h-4" />
+            <span className="text-sm font-medium whitespace-nowrap">{t('clipboard.password')}</span>
           </div>
-
-          <h1 className="text-3xl md:text-4xl font-semibold text-[#111111] mb-3">
-            {t('clipboard.title').split(' - ')[0]}
-          </h1>
-
-          <p className="text-[#666666]">
-            {t('clipboard.description')}
-          </p>
-        </div>
-
-        {/* Step 1: Set Key */}
-        <div className="w-full max-w-md mx-auto mb-6">
-          <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] flex items-center justify-center">
-                  <Key className="w-4 h-4 text-[#007AFF]" />
-                </div>
-                <span className="text-sm font-medium text-[#111111]">
-                  {t('clipboard.step1')}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${isKeySet ? 'bg-[#34C759]' : 'bg-[#E5E5E5]'}`} />
-                <span className={`text-xs ${isKeySet ? 'text-[#34C759]' : 'text-[#999999]'}`}>
-                  {isKeySet ? t('clipboard.keySet') : t('clipboard.noKey')}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                ref={inputRef}
-                type="password"
-                value={isKeySet ? '●●●●●●●●' : key}
-                onChange={(e) => setKey(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !isKeySet && key.trim()) {
-                    handleSetKey();
-                  }
-                }}
-                disabled={isKeySet}
-                placeholder={t('clipboard.keyPlaceholder')}
-                className="flex-1 px-3 py-2.5 text-sm border border-[#E5E5E5] rounded-lg bg-[#FAFAFA] text-[#111111] focus:outline-none focus:border-[#007AFF] disabled:text-[#999999] transition-colors"
-                maxLength={50}
-              />
-              {!isKeySet ? (
-                <button
-                  onClick={handleSetKey}
-                  disabled={!key.trim()}
-                  className="p-2.5 border border-[#E5E5E5] rounded-lg transition-all hover:border-[#007AFF] hover:bg-[#F0F9FF] disabled:opacity-50 disabled:hover:border-[#E5E5E5] disabled:hover:bg-transparent"
-                  title={t('clipboard.setKey')}
-                >
-                  <Check className="w-5 h-5 text-[#111111]" />
-                </button>
-              ) : (
-                <button
-                  onClick={handleClearKey}
-                  className="px-4 py-2.5 text-sm font-medium bg-[#FFF2F2] text-[#E11D48] rounded-lg transition-all hover:scale-105"
-                >
-                  {t('clipboard.clearKey')}
-                </button>
-              )}
-            </div>
+          <div className="flex-1 relative">
+            <input
+              ref={inputRef}
+              type={showPassword ? 'text' : 'password'}
+              value={isKeySet ? keyRef.current : key}
+              onChange={(e) => setKey(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !isKeySet && key.trim()) {
+                  handleSetKey();
+                }
+              }}
+              disabled={isKeySet}
+              placeholder={t('clipboard.passwordPlaceholder')}
+              className="w-full px-4 py-2.5 pr-10 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-900 focus:outline-none focus:border-purple-400 focus:bg-white disabled:text-gray-500 transition-colors"
+              maxLength={50}
+            />
+            <button
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
+          {!isKeySet ? (
+            <button
+              onClick={handleSetKey}
+              disabled={!key.trim()}
+              className="px-6 py-2.5 rounded-xl text-white text-sm font-medium transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #A855F7)' }}
+            >
+              {t('clipboard.enterChannel')}
+            </button>
+          ) : (
+            <button
+              onClick={handleClearKey}
+              className="px-5 py-2.5 text-sm font-medium text-red-500 bg-red-50 rounded-xl hover:bg-red-100 transition-colors whitespace-nowrap"
+            >
+              {t('clipboard.clearKey')}
+            </button>
+          )}
         </div>
 
         {isKeySet && (
           <>
-            {/* Step 2: Connection Status */}
-            <div className="w-full max-w-md mx-auto mb-6">
-              <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] flex items-center justify-center">
-                      <Wifi className="w-4 h-4 text-[#007AFF]" />
-                    </div>
-                    <span className="text-sm font-medium text-[#111111]">
-                      {t('clipboard.step2')}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${getConnectionStatusColor()}`} />
-                    <span className={`text-xs font-medium ${connectionStatus === 'connected' ? 'text-[#34C759]' :
-                      connectionStatus === 'connecting' ? 'text-[#F59E0B]' :
-                        connectionStatus === 'error' ? 'text-[#E11D48]' : 'text-[#666666]'
-                      }`}>
-                      {getConnectionStatusText()}
-                    </span>
-                    {connectionStatus !== 'connected' && (
-                      <button
-                        onClick={handleReconnect}
-                        className="flex items-center gap-1 px-2 py-1 text-xs text-[#666666] hover:text-[#007AFF] transition-colors"
-                      >
-                        <RefreshCw className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {connectionStatus === 'error' && (
-                  <div className="mt-3 flex items-start gap-2 px-3 py-2 bg-[#FFF2F2] rounded-lg border border-[#FECACA]">
-                    <AlertCircle className="w-4 h-4 text-[#E11D48] flex-shrink-0 mt-0.5" />
-                    <div className="text-xs text-[#991B1B]">
-                      <p className="font-medium">Connection failed</p>
-                      <p className="mt-1 opacity-75">Make sure the backend server is running at port 8080</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Step 3: Send Message */}
-            <div className="w-full max-w-md mx-auto mb-6">
-              <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-[#007AFF]" />
-                  </div>
-                  <span className="text-sm font-medium text-[#111111]">
-                    {t('clipboard.step3')}
+            {/* Channel Header */}
+            <div className="flex items-center justify-between py-3 px-4 border-t border-b border-gray-100 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Wifi className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {t('clipboard.channelLabel')} <span className="font-mono font-bold text-gray-900">{keyRef.current.toUpperCase()}</span>
                   </span>
                 </div>
-
-                <div className="space-y-3">
-                  <textarea
-                    ref={messageInputRef}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.ctrlKey && e.key === 'Enter') {
-                        handleSendMessage();
-                      }
-                    }}
-                    placeholder={t('clipboard.messagePlaceholder')}
-                    className="w-full px-3 py-2.5 text-sm border border-[#E5E5E5] rounded-lg bg-[#FAFAFA] text-[#111111] focus:outline-none focus:border-[#007AFF] resize-none transition-colors"
-                    rows={3}
-                  />
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[#999999]">
-                      Ctrl + Enter to send
-                    </span>
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full ${getConnectionDot()}`} />
+                  {connectionStatus === 'error' && (
                     <button
-                      onClick={handleSendMessage}
-                      disabled={!message.trim() || connectionStatus !== 'connected'}
-                      className="p-2.5 border border-[#E5E5E5] rounded-lg transition-all hover:border-[#007AFF] hover:bg-[#F0F9FF] disabled:opacity-50 disabled:hover:border-[#E5E5E5] disabled:hover:bg-transparent"
-                      title={t('clipboard.sendMessage')}
+                      onClick={handleReconnect}
+                      className="flex items-center gap-1 px-2 py-0.5 text-xs text-gray-500 hover:text-purple-600 transition-colors"
                     >
-                      <Send className="w-5 h-5 text-[#111111]" />
+                      <RefreshCw className="w-3 h-3" />
                     </button>
-                  </div>
+                  )}
                 </div>
               </div>
+              <span className="text-sm text-gray-400">
+                {messageCountText}
+              </span>
             </div>
 
-            {/* Step 4: Messages */}
-            <div className="w-full max-w-md mx-auto">
-              <div className="bg-white border border-[#E5E5E5] rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-[#F0F9FF] flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-[#007AFF]" />
-                  </div>
-                  <span className="text-sm font-medium text-[#111111]">
-                    {t('clipboard.step4')}
-                  </span>
+            {/* Connection Error */}
+            {connectionStatus === 'error' && (
+              <div className="mb-4 flex items-start gap-2 px-4 py-3 bg-red-50 rounded-xl border border-red-200">
+                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-red-700">
+                  <p className="font-medium">Connection failed</p>
+                  <p className="mt-1 opacity-75">Make sure the backend server is running at port 8080</p>
                 </div>
+              </div>
+            )}
 
-                <div className="max-h-80 overflow-y-auto space-y-2">
+            {/* Receive Area */}
+            <div className="flex-1 min-h-[300px] mb-6">
+              <div className="bg-white border border-gray-200 rounded-2xl p-5 h-full">
+                <h3 className="text-sm font-semibold text-gray-700 mb-4">{t('clipboard.receiveArea')}</h3>
+                <div className="max-h-[350px] overflow-y-auto space-y-2.5 pr-1">
                   {messages.length === 0 ? (
-                    <div className="text-center py-8">
-                      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#FAFAFA] flex items-center justify-center border border-[#E5E5E5]">
-                        <MessageSquare className="w-5 h-5 text-[#999999]" />
-                      </div>
-                      <p className="text-sm text-[#999999]">
-                        {t('clipboard.noMessages')}
-                      </p>
+                    <div className="text-center py-12">
+                      <p className="text-sm text-gray-400">{t('clipboard.noMessages')}</p>
                     </div>
                   ) : (
                     messages.map((msg, index) => (
                       <div
                         key={index}
-                        className={`relative p-3 rounded-lg border transition-all ${msg.type === 'sent'
-                          ? 'bg-[#F0F9FF] border-[#007AFF]/30'
-                          : msg.type === 'received'
-                            ? 'bg-[#F0FDF4] border-[#34C759]/30'
-                            : msg.type === 'success'
-                              ? 'bg-[#F0FDF4] border-[#34C759]/30'
-                              : 'bg-[#FFF2F2] border-[#E11D48]/30'
+                        className={`relative p-3 rounded-xl border transition-all ${msg.type === 'sent'
+                            ? 'bg-purple-50 border-purple-200'
+                            : msg.type === 'received'
+                              ? 'bg-green-50 border-green-200'
+                              : msg.type === 'success'
+                                ? 'bg-green-50 border-green-200'
+                                : 'bg-red-50 border-red-200'
                           }`}
                       >
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${msg.type === 'sent'
-                                ? 'bg-[#007AFF] text-white'
-                                : msg.type === 'received'
-                                  ? 'bg-[#34C759] text-white'
-                                  : msg.type === 'success'
-                                    ? 'bg-[#34C759] text-white'
-                                    : 'bg-[#E11D48] text-white'
+                                  ? 'bg-purple-600 text-white'
+                                  : msg.type === 'received'
+                                    ? 'bg-green-600 text-white'
+                                    : msg.type === 'success'
+                                      ? 'bg-green-600 text-white'
+                                      : 'bg-red-500 text-white'
                                 }`}>
-                                {msg.type === 'sent' ? 'Sent' : msg.type === 'received' ? 'Received' : msg.type === 'success' ? 'Success' : 'Error'}
+                                {msg.type === 'sent' ? 'Sent' : msg.type === 'received' ? 'Received' : msg.type === 'success' ? 'Info' : 'Error'}
                               </span>
-                              <span className="text-xs text-[#999999]">
+                              <span className="text-xs text-gray-400">
                                 {msg.timestamp.toLocaleTimeString()}
                               </span>
                             </div>
-                            <div className="text-sm text-[#111111] whitespace-pre-wrap break-words">
+                            <div className="text-sm text-gray-800 whitespace-pre-wrap break-words">
                               {msg.content}
                             </div>
                           </div>
                           {(msg.type === 'sent' || msg.type === 'received') && (
                             <button
                               onClick={() => handleCopyMessage(msg.content, index)}
-                              className="flex-shrink-0 p-1.5 hover:bg-[#E5E5E5] rounded transition-colors"
+                              className="flex-shrink-0 p-1.5 hover:bg-gray-200/50 rounded-lg transition-colors"
                             >
                               {copiedIndex === index ? (
-                                <Check className="w-4 h-4 text-[#34C759]" />
+                                <Check className="w-4 h-4 text-green-500" />
                               ) : (
-                                <Copy className="w-4 h-4 text-[#999999]" />
+                                <Copy className="w-4 h-4 text-gray-400" />
                               )}
                             </button>
                           )}
@@ -480,8 +389,55 @@ export const Clipboard = () => {
                       </div>
                     ))
                   )}
+                  <div ref={messagesEndRef} />
                 </div>
               </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-100 mb-4" />
+
+            {/* Send Area */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-5">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('clipboard.sendArea')}</h3>
+              <textarea
+                ref={messageInputRef}
+                value={message}
+                onChange={(e) => {
+                  if (e.target.value.length <= maxMessageLength) {
+                    setMessage(e.target.value);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.ctrlKey && e.key === 'Enter') {
+                    handleSendMessage();
+                  }
+                }}
+                placeholder={t('clipboard.inputPlaceholder')}
+                className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-900 focus:outline-none focus:border-purple-400 focus:bg-white resize-none transition-colors"
+                rows={3}
+              />
+
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-xs text-gray-400">
+                  {t('clipboard.charCount', { current: message.length, max: maxMessageLength })}
+                </span>
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!message.trim() || connectionStatus !== 'connected'}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white text-sm font-medium transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'linear-gradient(135deg, #7C3AED, #A855F7)' }}
+                >
+                  <Send className="w-4 h-4" />
+                  {t('clipboard.send')}
+                </button>
+              </div>
+            </div>
+
+            {/* Encryption Note */}
+            <div className="text-center mt-4 flex items-center justify-center gap-2">
+              <Lock className="w-3.5 h-3.5 text-gray-400" />
+              <span className="text-xs text-gray-400">{t('clipboard.encryptionNote')}</span>
             </div>
           </>
         )}

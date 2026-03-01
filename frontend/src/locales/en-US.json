@@ -10,30 +10,49 @@
       "confirm": "Confirm",
       "close": "Close"
     },
-    "header": {
-      "language": "Language"
+    "nav": {
+      "brand": "Toolbox",
+      "home": "Home",
+      "imageSplitter": "Image Split",
+      "clipboard": "Clipboard",
+      "fileTransfer": "File Transfer"
     },
     "home": {
       "title": "Multi-Function Online Toolbox",
-      "description": "Free, Secure, and Efficient Online Tool Collection",
+      "welcome": "Welcome to Toolbox",
+      "description": "A one-stop online tool collection offering image processing, text sync, file transfer and more. Choose any tool below to get started.",
+      "startUsing": "Start Using",
       "tools": {
         "imageSplitter": {
-          "title": "Image Splitter",
-          "description": "Split images into grids locally in your browser - no upload needed"
+          "title": "Image Grid Splitter",
+          "description": "Support 5x5 custom grid splitting with real-time preview export, making your social media images more creative."
         },
         "clipboard": {
-          "title": "Cross-Device Cloud Clipboard",
-          "description": "Secure, real-time cross-platform text sync with E2E encryption"
+          "title": "Encrypted Online Clipboard",
+          "description": "Password-based real-time text sync tool. Enter the same password to instantly transfer text between devices."
+        },
+        "fileTransfer": {
+          "title": "Secure File Transfer",
+          "description": "Point-to-point file transfer via extraction code. Support encrypted upload, privacy protection, and auto-destroy on expiry."
         }
       }
     },
     "imageSplitter": {
-      "title": "Online Image Splitter - Free Grid Cutter",
-      "description": "Split images into grids locally in your browser without upload. Support any image size, one-click download all pieces.",
+      "title": "Image Grid Splitter",
+      "description": "Choose split style, upload image, preview results in real-time. Local processing, data stays safe.",
+      "selectPattern": "Select Split Style",
+      "selectedCount": "Selected {{count}} regions",
+      "gridHint": "Click grid cells to select regions to split. Selected regions will be highlighted in purple.",
+      "uploadImage": "Upload Image",
+      "previewTitle": "Split Preview",
+      "originalImage": "Original Image",
+      "splitResult": "Split Result",
+      "pieceCount": "{{count}} pieces",
+      "piece": "Piece {{index}}",
+      "splitSuccess": "✓ Split complete! Right-click images to download",
       "selectGrid": "Select Grid",
       "gridSize": "Grid Size",
       "selectImage": "Select Image",
-      "uploadImage": "Click or drag to upload image",
       "preview": "Preview",
       "downloadAll": "Download All Pieces",
       "processing": "Processing...",
@@ -45,6 +64,17 @@
     "clipboard": {
       "title": "Cross-Device Cloud Clipboard - E2EE",
       "description": "Secure, real-time cross-platform text synchronization tool. End-to-end encryption with keys stored locally only.",
+      "password": "Password:",
+      "passwordPlaceholder": "Enter password to join channel",
+      "enterChannel": "Enter",
+      "channelLabel": "Channel:",
+      "messageCount": "{{count}} messages",
+      "receiveArea": "Receive",
+      "sendArea": "Send",
+      "inputPlaceholder": "Enter message (Ctrl+Enter to send)",
+      "charCount": "{{current}}/{{max}}",
+      "send": "Send",
+      "encryptionNote": "All messages are encrypted and only visible in channels with the same password",
       "step1": "1. Set Key",
       "step2": "2. Connection Status",
       "step3": "3. Send Message",

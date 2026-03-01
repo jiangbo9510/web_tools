@@ -1,5 +1,4 @@
 import { HelmetProvider } from 'react-helmet-async';
-import { LanguageToggle } from './components/LanguageToggle';
 import { Home } from './pages/Home';
 import { ImageSplitter } from './pages/ImageSplitter';
 import { Clipboard } from './pages/Clipboard';
@@ -26,7 +25,6 @@ function App() {
   return (
     <HelmetProvider>
       <div className="App">
-        <LanguageToggle />
         {getPageComponent()}
       </div>
     </HelmetProvider>
